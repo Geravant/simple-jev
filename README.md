@@ -10,7 +10,7 @@ The current implementation runs locally with Hugging Face Transformers and PyTor
 
 ## Running the HF Server
 
-Use Python 3.12 or newer.
+Use Python 3.12 or newer. The commands below use Python 3.13.
 
 ```bash
 # Clone the repository and create an environment.
@@ -28,9 +28,19 @@ python hf-server/hf_server.py \
   --device cpu --dtype float32 \
   --max-model-len 4096 \
   --max-batch-size 4 --max-batch-tokens 4096
+
+# Alternatively, run Gemma 4 MoE on an NVIDIA GPU with BF16 support.
+# Stop the CPU server first, or choose a different --port.
+python hf-server/hf_server.py \
+  --model google/gemma-4-26B-A4B-it \
+  --device cuda --dtype bfloat16 \
+  --max-model-len 8192 \
+  --max-batch-size 4 --max-batch-tokens 8192
 ```
 
 The first run downloads the model unless it is already cached. A local model directory can also be passed to `--model`. For CUDA or ROCm, install the appropriate PyTorch build for your hardware before installing the server.
+
+The GPU example uses [Gemma 4 26B-A4B Instruct](https://huggingface.co/google/gemma-4-26B-A4B-it). Allow memory for the full model weights, KV cache, and inference buffers; sparse expert activation does not mean only the active experts occupy memory. Use `--device auto` to let Transformers place weights across available devices. This is a launch example, not a verified full-size Gemma benchmark.
 
 The server listens on `http://127.0.0.1:8000`. Once the model is loaded:
 
@@ -42,7 +52,7 @@ Open `http://127.0.0.1:8000/docs` for the interactive API documentation. After i
 
 ## How do I use the API?
 
-Send a non-streaming `POST /v1/classifier` request. The `model` value must exactly match the ID or path used to start the server. Supply exactly one of:
+Send a non-streaming `POST /v1/classifier` request. The `model` value must exactly match the ID or path used to start the server. The examples below use Qwen; if you started Gemma, use `google/gemma-4-26B-A4B-it` instead. Supply exactly one of:
 
 - `state`: a string, JSON object, or JSON array containing the shared context.
 - `messages`: text chat history, rendered using the model's own chat template.
@@ -109,12 +119,37 @@ Question IDs become keys in `answers`. The following response illustrates the sh
 
 Choice and score confidence is the largest probability among their allowed labels. These distributions, and the Noul value, are not calibrated probabilities of correctness.
 
-For chat input, replace `state` with a `messages` array such as:
+For chat input, send `messages` instead of `state`. This complete example classifies a customer message and provides explicit descriptions for the possible answers:
 
-```json
-[
-  {"role": "user", "content": "Mia owns a red bicycle. Her dog is named Max."}
-]
+```bash
+curl http://127.0.0.1:8000/v1/classifier \
+  -H 'Content-Type: application/json' \
+  --data-binary @- <<'JSON'
+{
+  "model": "Qwen/Qwen3.5-0.8B",
+  "messages": [
+    {"role": "user", "content": "I was charged twice for my subscription. Please refund the duplicate charge."}
+  ],
+  "questions": {
+    "route": {
+      "type": "choice",
+      "instructions": "Which team should handle this message?",
+      "criteria": {
+        "billing": "Payments, invoices, and refunds",
+        "technical": "Errors and problems using the product"
+      }
+    },
+    "refund_requested": {
+      "type": "noul",
+      "instructions": "Does the customer explicitly request a refund?",
+      "criteria": {
+        "true": "The customer asks for money back.",
+        "false": "The customer makes no refund request."
+      }
+    }
+  }
+}
+JSON
 ```
 
 Unknown top-level request fields are ignored, including completion settings such as `temperature`, `max_tokens`, and `stream`. Unknown fields inside questions and options are rejected. There is no completion sampling or streaming. The HF server currently supports text only; images, audio, video, and tool calls are unsupported.
@@ -138,7 +173,40 @@ This avoids generating and parsing a prose or JSON answer token by token. Reusin
 
 A valid response structure does not guarantee a correct decision. Model capability and question wording still matter; evaluate answer quality on your own task separately from validating the server's inference and response pipeline.
 
-## How we speed up questions using shared prompts and only prefills
+## How shared prompts and prefill-only scoring reduce work
+
+A normal text-generation request has a **prefill** step that processes the input, followed by **decode** steps that generate tokens one at a time. Prefill already produces logits for the next token. Simple Jev uses those logits directly to score predefined answer labels, so it needs no autoregressive decode loop.
+
+For several questions about the same context, most of the prompt is identical. After applying the model's chat template and tokenizing each question's prompt, the server finds their exact common token prefix:
+
+```text
+Shared instructions + context + shared question briefing
+                           │
+                     Prefill once
+                     Save KV cache
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+  Color question    Support question    Dog question
+         │                 │                 │
+    Label logits      Label logits      Label logits
+         └─────────────────┼─────────────────┘
+                           ▼
+                JSON built by the server
+```
+
+The KV cache stores the model's attention state for the shared prefix. Each question continues from a copy of that cache with its own suffix and answer prefix. The server batches these suffixes, reads the logits at each row's last real token, and passes the selected label scores to the shared response scorer. Questions do not consume one another's answers.
+
+For example, suppose four question prompts each contain a 1,000-token common prefix and a 50-token suffix:
+
+| Execution | Prompt tokens processed, excluding padding |
+| --- | --- |
+| Evaluate each complete prompt separately | `4 × (1,000 + 50) = 4,200` |
+| Reuse the shared prefix | `1,000 + 4 × 50 = 1,200` |
+
+If all four suffixes fit in one batch, the shared execution takes one prefix forward pass and one batched suffix forward pass. These token counts illustrate avoided repeated input processing, not a measured latency ratio: each suffix still attends to the cached prefix, and copying caches, padding, and model execution have costs.
+
+`--max-batch-size` limits questions per suffix batch; `--max-batch-tokens` limits the number of padded suffix tokens in that batch. Neither limits total model/cache memory or chunks the shared prefix. The current server reuses caches within a request and processes model requests serially. See the [HF execution guide](hf-server/README.md#shared-prefix-execution) for details.
 
 ## Shared prompt contract and project layout
 
