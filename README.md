@@ -248,6 +248,7 @@ If all four suffixes fit in one batch, the shared execution takes one prefix for
 | [`common/PROMPT_STRUCTURE_V1.md`](common/PROMPT_STRUCTURE_V1.md) | Language-independent v1 specification: inputs, prompt strings, chat roles, answer labels, and scoring rules. |
 | [`hf-server/hf_server.py`](hf-server/hf_server.py) | Single-file Transformers implementation: chat rendering, model loading, cached inference, HTTP API, and CLI. |
 | [`hf-server/API_REFERENCE.md`](hf-server/API_REFERENCE.md) | Detailed request/response contract, validation, diagnostics, and configuration. |
+| [`RFDT/`](RFDT/README.md) | Task-specific decision training: prepare labels, distill teacher estimates, train on answer-token logits, and export a student. |
 
 `prepare_prompt(request, version="v1")` returns a cacheable system prompt prefix, prefix instruction, suffix instruction, and ordered questions. The inference implementation handles chat formatting and model execution; `common/response_scoring.py` converts label logits or mapped PyTorch tensors into answers.
 
@@ -265,3 +266,11 @@ python -m pytest -c hf-server/pyproject.toml common/tests hf-server/tests -q
 The tests cover request validation, prompt construction, response scoring, tensor/token mapping, HTTP behavior, and cached-versus-full inference using tiny locally initialized models. They do not require downloading pretrained model weights and do not measure classification accuracy.
 
 Models need a supported Transformers implementation, a usable chat template, compatible cache operations, and answer labels that each extend the rendered prompt by exactly one distinct token. The server checks label tokenization; compatibility with every open model is not guaranteed.
+
+## One more thing: Really Fancy Decision Training (RFDT)
+
+Want a smaller model that is better at your specific use case? **RFDT** lets you fine-tune a model on the decisions your application needs. Provide context or chat history, questions, and answers—or let a larger teacher model supply the missing answers.
+
+RFDT trains directly on the allowed answer-token logits using the same prompt structure as Simple Jev inference. The scripts support dataset preparation, teacher labeling, multi-GPU training, LoRA adapters, evaluation, and export to the HF server. See the [RFDT guide and examples](RFDT/README.md) to get started on your own hardware.
+
+As we scale up support and usage of Simple Jev models on [Featherless](https://featherless.ai/), we will roll out support for serving fine-tuned models and running fine-tuning on the platform. The RFDT scripts are available in this repository today; hosted fine-tuned model support and fine-tuning are part of that upcoming rollout.
