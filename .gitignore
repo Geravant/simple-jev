@@ -7,3 +7,7 @@ JOURNAL.md
 !.git*
 # Driving demo build dependencies
 demos/jevpilot/node_modules/
+
+# Track deployment workflows despite the general hidden-file exclusion.
+!.github/
+!.github/**

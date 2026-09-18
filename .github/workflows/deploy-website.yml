@@ -1,0 +1,53 @@
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - 'demos/jevpilot/**'
+      - '.github/workflows/deploy-website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize production deployments so an older upload cannot finish after a newer one.
+concurrency:
+  group: simple-jev-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: demos/jevpilot/package-lock.json
+      - name: Install driving demo dependencies
+        run: npm ci --prefix demos/jevpilot
+      - name: Check website and driving API adapter
+        run: |
+          node --test website/tests/*.test.mjs
+          node --test demos/jevpilot/tests/simple-jev-api.test.js
+      - name: Build driving simulator
+        run: npm --prefix demos/jevpilot run build
+      - name: Stage public website
+        run: |
+          mkdir -p "$RUNNER_TEMP/simple-jev-site"
+          rsync -a --exclude=tests --exclude=README.md --exclude=.DS_Store website/ "$RUNNER_TEMP/simple-jev-site/"
+      - name: Deploy to Recursal PROD
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 11a1edfd3dc0624feacbfa1db3a6760a
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo 'Missing GitHub Actions secret: CLOUDFLARE_API_TOKEN'
+            exit 1
+          fi
+          npx --yes wrangler@4.135.0 pages deploy "$RUNNER_TEMP/simple-jev-site" --project-name simple-jev --branch main

@@ -1,0 +1,46 @@
+.method-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: #eaf0e2;
+  border-radius: 12px;
+}
+.method-flow span {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+}
+.logit-lab {
+  display: grid;
+  gap: 20px;
+  background: #edf1e7;
+  padding: 24px;
+  border-radius: 12px;
+}
+.logit-lab label {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+.logit-lab input {
+  width: 100%;
+  accent-color: #547b35;
+}
+.logit-lab output {
+  font: 15px/1.8 var(--mono);
+}
+.docs-section li {
+  line-height: 1.8;
+  margin: 12px 0;
+}
+.docs-section summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.docs-code pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

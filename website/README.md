@@ -92,3 +92,11 @@ Both 2048 and the driving simulator load `shared/demo-header.js`, providing the 
 ## Vision catalog demo
 
 `/cool-demo/vision/` classifies the full 11-photo catalog with Gemma or Qwen. Four images share each API request. Batches run serially with a short delay and bounded HTTP 429 retries that honor Retry-After. Cancel preserves completed results. Source credits are in `catalog.json`. Include `cool-demo/vision/` in deployment; no build is needed.
+
+## Production deployment
+
+`.github/workflows/deploy-website.yml` publishes to Cloudflare Pages in **Recursal PROD** when `main` receives changes under `website/`, `demos/jevpilot/`, or the deployment workflow. You can also run **Deploy website** manually from GitHub Actions on `main`.
+
+Configure the repository Actions secret `CLOUDFLARE_API_TOKEN` with **Account → Cloudflare Pages → Edit**, restricted to Recursal PROD. The workflow supplies the PROD account ID and deploys to the `simple-jev` project (`https://simple-jev-6i4.pages.dev`). DNS and custom domains are managed separately; deployments update the existing project.
+
+The workflow installs locked dependencies, runs website tests and the driving API adapter tests, rebuilds the driving simulator, and stages the website without tests or README files. The deployment token is supplied only to the upload step. No local Cloudflare login is required by CI.
