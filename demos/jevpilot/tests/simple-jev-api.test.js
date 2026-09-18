@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Simulation} from '../src/simulation.js';
-import {preparePilotRequest,evaluatePilot,MODEL} from '../src/simple-jev-api.js';
+import {preparePilotRequest,evaluatePilot,MODEL,setModel,pricingFor} from '../src/simple-jev-api.js';
 test('compact requests cover each world with model and original candidate aliases',()=>{
  for(const type of ['town','city','highway']) {
   const state=new Simulation(42,type).decisionState();
@@ -26,8 +26,20 @@ test('real adapter maps classifier choices to simulation controls and rejects in
   };
   const out=await evaluatePilot(state);
   assert.equal(out.controls.velocity,state.vectors[out.selection.choice].velocity_mps);
-  assert.equal(out.cost_usd,0);
+  assert.equal(out.usage.input_tokens,500);
+  assert.equal(out.cost_usd,500*0.28/1_000_000);
+  assert.equal(out.pricing.input_per_million,0.28);
   globalThis.fetch=async()=>Response.json({answers:{},usage:{input_tokens:1,output_tokens:1}});
   await assert.rejects(()=>evaluatePilot(state),/invalid driving choice/);
  } finally {globalThis.fetch=original;}
+});
+
+test('model selection updates request model and production price',()=>{
+ const initial=MODEL;
+ try {
+  setModel('featherless-ai/Qwen3.8-27B-classifier');
+  assert.equal(preparePilotRequest(new Simulation(42,'city').decisionState()).request.model,MODEL);
+  assert.equal(pricingFor().input_per_million,0.30);
+  assert.throws(()=>setModel('unknown'),/Unknown driving model/);
+ } finally {setModel(initial);}
 });

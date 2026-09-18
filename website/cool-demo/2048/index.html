@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>2048 · Simple Jev</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #10151e;
+      color: #edf2fa;
+      font: 16px system-ui;
+    }
+    main {
+      max-width: 1050px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      font-size: 46px;
+      margin: 0;
+    }
+    small,
+    label {
+      color: #a9b7c9;
+    }
+    a {
+      color: #83c5ff;
+    }
+    button,
+    select {
+      background: #273346;
+      border: 1px solid #41536d;
+      color: inherit;
+      border-radius: 8px;
+      padding: 11px;
+      margin: 4px 4px 4px 0;
+      font: inherit;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #32765e;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 480px) 1fr;
+      gap: 30px;
+      margin-top: 24px;
+    }
+    canvas {
+      width: 100%;
+      border-radius: 12px;
+    }
+    aside,
+    details,
+    .metrics {
+      background: #192331;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .metrics {
+      margin-top: 20px;
+    }
+    .row {
+      padding: 12px 0;
+    }
+    .row.chosen {
+      color: #74e4b1;
+    }
+    .track {
+      height: 12px;
+      background: #354257;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .fill {
+      height: 100%;
+      background: #72b8ee;
+    }
+    .chosen .fill {
+      background: #74e4b1;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font: 13px ui-monospace;
+    }
+    #status {
+      min-height: 48px;
+      color: #a9d7ff;
+    }
+    details {
+      margin-top: 16px;
+    }
+    summary {
+      cursor: pointer;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    @media (max-width: 720px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      main {
+        margin: 20px auto;
+      }
+    }
+
+    body {
+      background: #f8f9f6;
+      color: #202a26;
+    }
+    small,
+    label {
+      color: #586a60;
+    }
+    a {
+      color: #415d31;
+    }
+    button,
+    select {
+      background: #fff;
+      border-color: #cbd4c5;
+      color: #202a26;
+    }
+    button.primary {
+      background: #d8edb6;
+    }
+    aside,
+    details,
+    .metrics {
+      background: #edf1e7;
+    }
+    .track {
+      background: #d5ddcf;
+    }
+    .fill {
+      background: #759867;
+    }
+    .row.chosen {
+      color: #315c27;
+    }
+    .chosen .fill {
+      background: #6fa14c;
+    }
+    #status {
+      color: #415d31;
+    }
+    button:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 3px solid #d4792c;
+      outline-offset: 3px;
+    }
+    header {
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    canvas {
+      touch-action: none;
+    }
+    #status {
+      overflow-wrap: anywhere;
+    }
+    aside > label {
+      display: block;
+      margin-top: 12px;
+    }
+    aside select {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+    }
+    aside {
+      min-width: 0;
+    }
+    #status {
+      min-height: 48px;
+    }
+  body { padding-top:64px; }
+@media(max-width:560px) { body { padding-top:100px; } }
+</style>
+  <script src="/shared/demo-header.js" defer></script>
+  <simple-jev-demo-header></simple-jev-demo-header>
+  <main>
+    <header>
+      <div>
+        <small>SIMPLE JEV · PLAY WITH AI</small>
+        <h1>2048</h1>
+      </div>
+      
+    </header>
+    <p>
+      The board waits for the model. One response, one move. Arrow keys take
+      manual control.
+    </p>
+    <p>
+      <small
+        >Direct, keyless API: simple-jev-demo-api.featherless.ai. Models loaded
+        from /v1/models. No login or API key. Public demo: 2k context · 4 RPS.
+        Usage totals cover this page session.</small
+      >
+    </p>
+    <button class="primary" id="start">Start classifier</button
+    ><button id="step">One AI move</button
+    ><button id="stop">Pause / manual</button><button id="new">New game</button>
+    <div class="layout">
+      <section>
+        <canvas
+          id="board"
+          width="400"
+          height="400"
+          aria-label="2048 game board"
+        ></canvas>
+        <p id="score"></p>
+        <div id="controls"></div>
+      </section>
+      <aside>
+        <label for="model">Classifier model</label
+        ><select id="model"></select>
+        <h2>Action probabilities</h2>
+        <div id="bars"></div>
+        <p id="status" role="status" aria-live="polite">
+          Ready — play manually or start the classifier.
+        </p>
+        <small
+          >Only legal moves are scored. A single legal move is resolved locally.
+          Ties pick randomly among the highest-scoring moves. Scores are
+          classifier outputs, not calibrated confidence.</small
+        >
+      </aside>
+    </div>
+    <div class="metrics">
+      <strong>Token usage · this session</strong>
+      <p id="totals"></p>
+      <p id="last"></p>
+    </div>
+    <details>
+      <summary>Instruction prompt</summary>
+      <pre id="prompt"></pre>
+    </details>
+    <details>
+      <summary>Latest responses and usage</summary>
+      <pre id="logs"></pre>
+    </details>
+  </main>
+  <script type="module" src="./app.js"></script>
+</html>

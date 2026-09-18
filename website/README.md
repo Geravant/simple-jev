@@ -80,3 +80,15 @@ Select Production, enter a Featherless API key, and run a classification. Both m
 ## Playable driving demo
 
 Open [Simple Jev Pilot](http://127.0.0.1:8765/cool-demo/drive/) or use the Cool demos page. It adapts Standard Agents’ JevPilot to our public classifier API. Manual driving, three worlds, AI autopilot, and JSON inspection are available. Source and rebuild instructions are in `demos/jevpilot/README.md`; include `website/cool-demo/drive/` in static deployment. This demo has its own Vite build; other website pages remain build-free.
+
+## Playable 2048
+
+The Cool demos page links to `/cool-demo/2048/`. This build-free game supports keyboard, swipe, and button controls, one AI move or continuous play, model selection, and Gemma/Qwen image input. It calls the public demo directly and stores usage only in page memory. Include `cool-demo/2048/` when deploying the website. See its README for implementation and validation details.
+
+## Shared game navigation
+
+Both 2048 and the driving simulator load `shared/demo-header.js`, providing the Simple Jev home link, Cool demos, Playground, and API docs. Include `shared/` when deploying. The driving source references the shared script externally so changing navigation does not require rebuilding the simulator.
+
+## Vision catalog demo
+
+`/cool-demo/vision/` classifies the full 11-photo catalog with Gemma or Qwen. Four images share each API request. Batches run serially with a short delay and bounded HTTP 429 retries that honor Retry-After. Cancel preserves completed results. Source credits are in `catalog.json`. Include `cool-demo/vision/` in deployment; no build is needed.

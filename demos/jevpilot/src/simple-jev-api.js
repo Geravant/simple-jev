@@ -5,13 +5,29 @@
 import { prepareJevRequest, expandJevAnswers } from './jev-request.js';
 import { decisionSelection } from './planning.js';
 const BASE = 'https://simple-jev-demo-api.featherless.ai/v1';
-export const MODEL = 'featherless-ai/Qwen3.8-27B-classifier';
+// Production input prices per million tokens; developer-plan beta pricing.
+export const MODELS = [
+  {id:'featherless-ai/Qwen3.6-35B-A3B-classifier',label:'Qwen3.6 35B A3B · MoE',rate:0.28},
+  {id:'featherless-ai/gemma-4-26B-A4B-classifier',label:'Gemma 4 26B A4B · MoE',rate:0.28},
+  {id:'featherless-ai/Qwen3.8-27B-classifier',label:'Qwen3.8 27B',rate:0.30},
+  {id:'featherless-ai/RWKV-small-classifier',label:'RWKV Small',rate:0.03},
+  {id:'featherless-ai/RWKV-mid-classifier',label:'RWKV Mid',rate:0.10},
+  {id:'featherless-ai/RWKV-std-classifier',label:'RWKV Standard',rate:0.20},
+];
+export let MODEL = MODELS[0].id;
+export function setModel(id) {
+  if (!MODELS.some(model=>model.id===id)) throw new Error('Unknown driving model');
+  MODEL=id;
+}
+export function pricingFor(id=MODEL) {
+  return {input_per_million:MODELS.find(model=>model.id===id).rate,output_per_million:0,source:'Featherless developer-plan beta pricing; subject to change. See https://featherless.ai'};
+}
 let nextCall = 0;
 const round = x => Number.isFinite(x) ? Math.round(x * 10) / 10 : null;
-export function preparePilotRequest(full) {
+export function preparePilotRequest(full, model=MODEL) {
   const prepared = prepareJevRequest(full);
   const columns = ['speed','steer','route_error','offroad_fraction','collision','stop_at_line'];
-  prepared.request.model = MODEL;
+  prepared.request.model = model;
   prepared.request.state = {
     speed_mps: round(full.speed_mps),
     speed_ceiling_mps: round(full.speed_ceiling_mps),
@@ -38,7 +54,9 @@ export function preparePilotRequest(full) {
   return prepared;
 }
 export async function evaluatePilot(state, signal) {
-  const started=performance.now(), prepared=preparePilotRequest(state);
+  // Capture model and price together so switching cannot relabel an in-flight response.
+  const model=MODEL, pricing=pricingFor(model);
+  const started=performance.now(), prepared=preparePilotRequest(state,model);
   let data={answers:{},usage:{input_tokens:0,output_tokens:0}};
   const apiCall=Object.keys(prepared.request.questions).length>0;
   if(apiCall) {
@@ -57,10 +75,10 @@ export async function evaluatePilot(state, signal) {
   if(!selection || !state.vectors[selection.choice]) throw new Error('Classifier returned an invalid driving choice.');
   const v=state.vectors[selection.choice];
   if((v.collision_imminent ?? v.collision_predicted) && v.velocity_mps!==0) throw new Error('Selected path risks collision. Holding the car before retry.');
-  return {model:MODEL,decision_source:apiCall?'jev':'only_eligible_action',request_bytes:new TextEncoder().encode(JSON.stringify(prepared.request)).length,candidate_ids:prepared.aliases,resolved_single_choices:Object.keys(prepared.fixed),answers,selection,batch_id:state.batch_id,controls:{steering:v.steering,velocity:v.velocity_mps},usage:data.usage || {input_tokens:0,output_tokens:0},latency_ms:Math.round(performance.now()-started),cost_usd:0,pricing:{input_per_million:0,output_per_million:0,source:'Free public Simple Jev demo'}};
+  return {model,decision_source:apiCall?'jev':'only_eligible_action',request_bytes:new TextEncoder().encode(JSON.stringify(prepared.request)).length,candidate_ids:prepared.aliases,resolved_single_choices:Object.keys(prepared.fixed),answers,selection,batch_id:state.batch_id,controls:{steering:v.steering,velocity:v.velocity_mps},usage:data.usage || {input_tokens:0,output_tokens:0},latency_ms:Math.round(performance.now()-started),cost_usd:(data.usage?.input_tokens ?? 0)*pricing.input_per_million/1_000_000,pricing};
 }
 export async function pilotFetch(path, options={}) {
-  if(path==='/api/status') return Response.json({auth_required:false,authenticated:false,configured:true,pricing:{input_per_million:0,output_per_million:0}});
+  if(path==='/api/status') return Response.json({auth_required:false,authenticated:false,configured:true,pricing:pricingFor()});
   try {return Response.json(await evaluatePilot(JSON.parse(options.body).state,options.signal));}
   catch(error) {return Response.json({error:error.message},{status:502});}
 }

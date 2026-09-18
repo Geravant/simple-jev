@@ -1436,3 +1436,22 @@ body.crashed .world-picker { visibility:visible; }
  .navigation-hud { top:145px; }
  .simple-jev-api-badge { top:auto; bottom:150px; left:10px; max-width:calc(100% - 20px); font-size:9px; }
 }
+
+/* Reserve the top navigation bar; game controls stay below it. */
+.topbar { top:86px; }
+.navigation-hud { top:86px; }
+.simple-jev-api-badge { top:212px; }
+@media(max-width:900px), (pointer:coarse) {
+ .topbar { top:74px; }
+ .navigation-hud { top:209px; }
+ .simple-jev-api-badge { top:auto; }
+}
+
+@media(max-width:560px) { .topbar { top:110px; } .navigation-hud { top:245px; } #scene-loader { top:100px; } }
+
+.model-picker { display:flex; align-items:center; gap:8px; }
+.model-picker label { font-size:12px; font-weight:700; white-space:nowrap; }
+.model-picker select { flex:1; min-width:0; padding:10px; border:1px solid #bcc9bc; border-radius:7px; background:white; color:#263629; font:inherit; font-size:13px; }
+.simple-jev-api-badge { top:264px; }
+@media(max-width:900px), (pointer:coarse) { .navigation-hud { top:261px; } .simple-jev-api-badge { top:auto; } }
+@media(max-width:560px) { .navigation-hud { top:297px; } }

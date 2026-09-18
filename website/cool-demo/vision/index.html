@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Hot dog or sandwich? · Simple Jev</title>
+    <link rel="icon" href="/assets/simple-jev.png" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="vision.css" />
+    <script src="/shared/demo-header.js" defer></script>
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <simple-jev-demo-header></simple-jev-demo-header>
+    <main class="wrap vision-page">
+      <p class="eyebrow">SIMPLE JEV · VISION LAB</p>
+      <h1>Hot dog or sandwich?</h1>
+      <p class="lead">
+        Let the model work through the whole catalog, four photos at a time.
+        Watch the decisions arrive side by side.
+      </p>
+      <div class="vision-controls">
+        <div>
+          <label for="model">Vision model</label
+          ><select id="model" disabled>
+            <option>Loading models…</option>
+          </select>
+        </div>
+        <button id="classify" disabled>Classify all</button
+        ><button id="cancel" hidden>Cancel</button>
+      </div>
+      <p id="status" role="status" aria-live="polite">Loading the catalog…</p>
+      <p class="limits">
+        No API key · 2k context · 4 RPS. Four photos share each API request.
+        Batches run back to back with a short delay and rate-limit retries.
+        Images are sent only when you press Classify all.
+      </p>
+      <details class="definition">
+        <summary>What counts as a sandwich?</summary>
+        <p>
+          For this demo, a hot dog is a sausage in a split bun. Sandwiches
+          include filled bread slices, rolls, and burgers, but exclude hot dogs.
+          “Neither / unclear” is available when neither category fits. These are
+          the definitions sent to the model—not a verdict on the great sandwich
+          debate.
+        </p>
+        <p>
+          Probabilities reflect model preferences among these categories, not
+          calibrated certainty. No expected labels are sent with the photos.
+        </p>
+      </details>
+      <section
+        id="catalog"
+        class="vision-grid"
+        aria-label="Photo catalog"
+      ></section>
+      <details class="response-inspector">
+        <summary>Under the hood · latest run</summary>
+        <pre id="responses">Run a classification to see the API responses.</pre>
+      </details>
+      <p class="credits">
+        Catalog photography from <a href="https://unsplash.com">Unsplash</a>,
+        used under the
+        <a href="https://unsplash.com/license">Unsplash License</a>. Each card
+        links to its source.
+      </p>
+    </main>
+  </body>
+</html>

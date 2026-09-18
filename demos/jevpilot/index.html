@@ -20,7 +20,7 @@
     <style>
       #scene-loader {
         position: fixed;
-        inset: 0;
+        inset: 64px 0 0;
         z-index: 1000;
         display: grid;
         place-content: center;
@@ -77,8 +77,10 @@
         }
       }
     </style>
+    <script src="/shared/demo-header.js" defer></script>
   </head>
   <body class="loading">
+    <simple-jev-demo-header></simple-jev-demo-header>
     <div id="scene-loader" role="status" aria-live="polite">
       <img src="/assets/simple-jev.png" alt="" />
       <strong>Getting your drive ready</strong>
