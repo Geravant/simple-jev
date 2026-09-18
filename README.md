@@ -4,6 +4,8 @@
 
 Use compatible open models from huggingface, for structured classification and scoring, without training a separate classifier head.
 
+Explore the demos, playground, and documentation at [simple-jev.featherless.ai](https://simple-jev.featherless.ai/).
+
 Send shared context and a set of questions. Simple Jev reads the model's next-token logits for each question and builds a JSON response containing choices, rubric scores, or truth/support judgments. The model does not generate a JSON completion: the server constructs the response from the scores.
 
 The current implementation runs locally with Hugging Face Transformers and PyTorch. Shared request validation, versioned prompt instructions, and response scoring live in the plain Python `common/` folder so other inference implementations can use the same rules.
