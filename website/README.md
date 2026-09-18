@@ -34,6 +34,7 @@ Open the [playground](http://127.0.0.1:8765/) or the [API documentation](http://
 ## Files
 
 - `demos.html`: community spotlight and links to preselected playground scenarios.
+- `cool-demo/bookmarks/`: browser-bookmark upload and a small, live structured-classification sample.
 - `index.html`: homepage, API example, and link to the playground.
 - `playground.html`: dedicated interactive editor and results page.
 - `syntax.js`: safe syntax highlighting for static examples and live JSON.
@@ -45,7 +46,7 @@ Open the [playground](http://127.0.0.1:8765/) or the [API documentation](http://
 - `playground.mjs`: scenario/question examples, request construction, and response validation.
 - `tests/playground.test.mjs`: offline request/response contract tests (`node --test website/tests/playground.test.mjs`).
 - `assets/simple-jev.png`: the official Simple Jev mascot badge, used as the logo and favicon.
-- `assets/featherless.png`: supplied Featherless logo for the “Built by Featherless.ai” attribution.
+- `assets/featherless_logo_dark.svg`: supplied Featherless logo for the “Built by Featherless.ai” attribution.
 
 ## API behavior
 
@@ -88,6 +89,10 @@ The Cool demos page links to `/cool-demo/2048/`. This build-free game supports k
 ## Shared game navigation
 
 Both 2048 and the driving simulator load `shared/demo-header.js`, providing the Simple Jev home link, Cool demos, Playground, and API docs. Include `shared/` when deploying. The driving source references the shared script externally so changing navigation does not require rebuilding the simulator.
+
+## Bookmark sorter
+
+`/cool-demo/bookmarks/` accepts a local Netscape-format browser export (Chrome, Firefox, Safari, or Edge), selects at most 30 links, and sends one shared-context request with 30 choice questions to the public demo API. It rejects files over 5 MB, scans at most 10,000 anchors, and bounds/normalizes title and URL input before building the request. The export stays in the browser; only the selected titles and URLs are sent when the visitor runs the classifier. Include `cool-demo/bookmarks/` and `shared/` when deploying.
 
 ## Vision catalog demo
 
