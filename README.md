@@ -6,8 +6,17 @@ Turn any open model into a "classifier/jev" model.
 
 ## Running the HF Server
 
-Clone the repo
+```bash
+# Clone the repo
+git clone https://github.com/featherless-ai/simple-jev.git
+
 
 ```
-git clone https://github.com/featherless-ai/simple-jev.git
-```
+
+## How do I use the API
+
+This is based on the typesafe.ai API implementation, with extensions
+
+## What is a classifier? And why is this systemone a big deal?
+
+[ai notes, research and fill this up]
