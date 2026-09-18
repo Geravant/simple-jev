@@ -1,6 +1,7 @@
 .*
 
-# For now
-hf-server
+# Ignore agentic AI jounrals
+JOURNAL.md
 
+# Include git
 !.git*

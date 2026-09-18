@@ -124,8 +124,8 @@ These settings do not change the prompt or numerical answer. Every selected logi
 must be finite; unused vocabulary entries are not scored.
 
 Unknown top-level request fields are ignored. Questions and options remain
-strict. The HF server is unchanged. Choice and score preserve its default label-based
-behavior; Noul uses integer labels 1–9 with its existing mapping to [0.01, 0.99].
+strict. The HF server imports these modules for validation, prompt formatting, and
+response scoring; Noul uses integer labels 1–9 with its existing mapping to [0.01, 0.99].
 All question types now share one constant system prefix, including Noul-only
 requests. Cache reuse must compare rendered token prefixes.
 
@@ -135,6 +135,5 @@ Run from the repository root with pytest installed:
 python -m pytest common/tests -q
 ```
 
-Tests include mixed-question prompt/answer parity with the HF default behavior
-when the local reference is present, plus fixed Noul mapping and removed-option
-validation.
+Tests cover HF adapter assembly from the shared prompt plan when the server is
+present, plus fixed Noul mapping and removed-option validation.

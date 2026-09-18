@@ -106,15 +106,15 @@ def test_score_label_mapping(levels):
 
 
 @pytest.mark.parametrize("context", ["state", "chat", "system_chat"])
-def test_hf_reference_parity(context):
-    # Optional integration test: the original HF copy is currently Git-ignored.
+def test_hf_adapter_uses_common_plan(context):
+    # Optional integration test: the HF adapter is currently Git-ignored.
     hf_path = Path(__file__).resolve().parents[2] / "hf-server"
-    if not (hf_path / "simple_jev").is_dir():
-        pytest.skip("Local HF reference copy is unavailable")
+    if not (hf_path / "hf_server.py").is_file():
+        pytest.skip("Local HF adapter is unavailable")
     sys.path.insert(0, str(hf_path))
-    from simple_jev.prompts import PromptCompiler
-    from simple_jev.schema import SystemOneRequest
-    from simple_jev.scoring import assemble
+    from hf_server import PromptCompiler
+
+    from common import ClassifierRequest
 
     class Tokenizer:
         def encode(self, text, **kwargs):
@@ -127,7 +127,7 @@ def test_hf_reference_parity(context):
         if context == "system_chat":
             body["messages"].insert(0, {"role": "system", "content": "Original system"})
     plan = prepare_prompt(body)
-    request = SystemOneRequest.model_validate(body)
+    request = ClassifierRequest.model_validate(body)
     reference = PromptCompiler(Tokenizer()).compile(request, render_only=True)
     system = plan.system_prompt_prefix + plan.prefix_instruction
     assert len(plan.questions) == len(reference.branches)
@@ -148,25 +148,10 @@ def test_hf_reference_parity(context):
             else:
                 messages.insert(0, {"role": "system", "content": system})
             messages.append({"role": "user", "content": content})
-        # The shared Noul wording intentionally differs from the HF reference.
-        expected_messages = [dict(message) for message in branch.messages]
-        if body["questions"][question.question_id]["type"] == "noul":
-            expected_messages[-1]["content"] = expected_messages[-1]["content"].replace(
-                "Encode probability 0.1 as 1, 0.2 as 2, and so on through 0.9 as 9.",
-                "Encode probability with 0.1 being the lowers, and 0.9 as the highest",
-            )
-        assert messages == expected_messages
+        assert messages == branch.messages
         assert question.answer_prefix == branch.answer_prefix
-        assert question.question_id == branch.question_id
-        assert [
-            chr(PromptCompiler(Tokenizer()).output_ids[i])
-            for i in branch.output_indices
-        ] == list(question.output_labels)
-    logits = logits_for(plan)
-    rows = [list(logits[q.branch_id].values()) for q in plan.questions]
-    assert build_answers(plan, logits, advanced=True) == assemble(
-        request, reference.branches, rows
-    )
+        assert question.branch_id == branch.branch_id
+    assert reference.plan == plan
 
 
 def test_unknown_request_fields_do_not_change_prompts_or_answers():
