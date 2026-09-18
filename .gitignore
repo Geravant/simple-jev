@@ -5,3 +5,5 @@ JOURNAL.md
 
 # Include git
 !.git*
+# Driving demo build dependencies
+demos/jevpilot/node_modules/
