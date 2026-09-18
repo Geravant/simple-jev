@@ -1529,3 +1529,157 @@ input:focus-visible {
     display: inline-flex;
   }
 }
+.connection-controls {
+  margin: 20px 0;
+  display: grid;
+  gap: 8px;
+}
+.connection-controls label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.connection-controls select,
+.connection-controls input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd3c7;
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+}
+#production-settings {
+  margin-top: 10px;
+}
+#connect-production {
+  margin-top: 10px;
+}
+
+.demos-page {
+  padding-block: 48px 72px;
+}
+.demos-lead {
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.7;
+}
+.demo-feature {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  margin: 38px 0 56px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.demo-feature-copy {
+  padding: 32px;
+}
+.demo-feature h2 {
+  font-size: 36px;
+  margin: 15px 0;
+  letter-spacing: -1px;
+}
+.demo-feature p,
+.demos-heading > p:last-child,
+.demo-gallery p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.demo-feature .playground-link {
+  display: inline-block;
+  margin: 10px 0;
+}
+.demo-feature .demo-source {
+  font-size: 12px;
+}
+.driving-art {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  background: #d9e7c4;
+  display: grid;
+  place-items: center;
+}
+.demo-road {
+  position: absolute;
+  width: 150px;
+  height: 160%;
+  background: #39443e;
+  transform: rotate(28deg);
+  border-inline: 7px solid #f6f4da;
+}
+.demo-road::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 4px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    #d4e894 0 24px,
+    transparent 24px 48px
+  );
+}
+.demo-car {
+  position: relative;
+  color: #202a26;
+  background: #ef9950;
+  border: 4px solid #29362d;
+  border-radius: 16px;
+  width: 62px;
+  height: 104px;
+  font-size: 38px;
+  display: grid;
+  place-items: center;
+  transform: rotate(28deg);
+}
+.driving-art > span {
+  position: absolute;
+  bottom: 24px;
+  background: #f8f9f6;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.demos-heading h2 {
+  font-size: 32px;
+  letter-spacing: -1px;
+  margin: 12px 0;
+}
+.demo-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.demo-gallery article {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+}
+.demo-gallery h3 {
+  font-size: 23px;
+  line-height: 1.3;
+}
+.demo-gallery a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-weight: 600;
+}
+.site-header nav {
+  flex-wrap: wrap;
+}
+@media (max-width: 760px) {
+  .demo-feature,
+  .demo-gallery {
+    grid-template-columns: 1fr;
+  }
+  .demo-feature-copy {
+    padding: 24px;
+  }
+  .site-header nav a.demos-nav {
+    display: inline-flex;
+  }
+}

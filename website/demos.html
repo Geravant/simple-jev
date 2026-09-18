@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f9f6" />
+    <meta
+      name="description"
+      content="Turn context into structured decisions with open language models. Try Simple Jev's live classifier demo, explore the API, and train a model for your task."
+    />
+    <title>Cool demos — Simple Jev</title>
+    <link rel="icon" type="image/png" href="assets/simple-jev.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#demos">Skip to demos</a>
+    <header class="site-header wrap">
+      <a class="wordmark" href="index.html" aria-label="Simple Jev home"
+        ><img
+          class="brand-logo"
+          src="assets/simple-jev.png"
+          alt="Simple Jev"
+          width="64"
+          height="64"
+      /></a>
+      <a
+        class="built-by header-credit"
+        href="https://featherless.ai/"
+        aria-label="Built by Featherless.ai"
+        ><span>Built by</span
+        ><img
+          src="assets/featherless.png"
+          alt="Featherless.ai"
+          width="156"
+          height="51"
+      /></a>
+      <nav aria-label="Main navigation">
+        <a class="demos-nav" href="demos.html" aria-current="page"
+          >Cool demos</a
+        >
+        <a href="playground.html" class="playground-nav">Playground</a>
+        <a class="docs-link" href="docs.html">API docs</a>
+        <a href="index.html#how-it-works">How it works</a>
+        <a href="index.html#rfdt">RFDT</a>
+        <a
+          class="nav-github"
+          href="https://github.com/featherless-ai/simple-jev"
+          >GitHub <span aria-hidden="true">↗</span></a
+        >
+      </nav>
+    </header>
+
+    <main class="wrap demos-page" id="demos">
+      <p class="eyebrow">SMALL DECISIONS. BIG POSSIBILITIES.</p>
+      <h1>Cool demos.</h1>
+      <p class="demos-lead">
+        See what happens when models choose the next action. Explore a community
+        project, or try a ready-to-edit scenario.
+      </p>
+      <article class="demo-feature">
+        <div class="driving-art" aria-hidden="true">
+          <div class="demo-road"></div>
+          <div class="demo-car">↗</div>
+          <span>CONTEXT → CHOICE → ACTION</span>
+        </div>
+        <div class="demo-feature-copy">
+          <p class="section-number">COMMUNITY SPOTLIGHT · STANDARD AGENTS</p>
+          <h2>JevPilot</h2>
+          <p>
+            A playable Three.js driving simulator with Jev-powered autopilot.
+            Road conditions, traffic, and route guidance inform choices between
+            candidate steering and speed combinations.
+          </p>
+          <p>
+            Drive manually, toggle autopilot, and inspect the candidate paths
+            and decision probabilities.
+          </p>
+          <a
+            class="playground-link"
+            href="cool-demo/drive/"
+            >Play the driving demo ↗</a
+          >
+          <p class="demo-source">
+            Adapted from JevPilot by Standard Agents, now playable here against the Simple Jev API.
+            No API key required. <a href="https://github.com/standardagents/jevpilot">Original source ↗</a>
+          </p>
+        </div>
+      </article>
+      <div class="demos-heading">
+        <p class="section-number">TRY SIMPLE JEV</p>
+        <h2>Pick a scenario. Make it yours.</h2>
+        <p>
+          These examples open in our live playground. Edit the context and
+          questions, then run the model.
+        </p>
+      </div>
+      <div class="demo-gallery">
+        <article>
+          <span class="context-kind">01 / CUSTOMER SUPPORT</span>
+          <h3>Give every ticket a next step.</h3>
+          <p>
+            Choose the right team, score urgency, and detect refund requests
+            from a customer message.
+          </p>
+          <a href="playground.html?scenario=support">Try support triage ↗</a>
+        </article>
+        <article>
+          <span class="context-kind">02 / PRODUCT REVIEWS</span>
+          <h3>Find the signal in feedback.</h3>
+          <p>
+            Classify sentiment and score how useful a review is. Try mixed
+            feedback, praise, or a vague comment.
+          </p>
+          <a href="playground.html?scenario=reviews">Try review analysis ↗</a>
+        </article>
+        <article>
+          <span class="context-kind">03 / COMMUNITY MODERATION</span>
+          <h3>Keep the conversation on topic.</h3>
+          <p>
+            Identify a post’s topic and judge whether it looks like spam. Adjust
+            the questions to fit your community.
+          </p>
+          <a href="playground.html?scenario=moderation">Try moderation ↗</a>
+        </article>
+      </div>
+    </main>
+    <footer class="wrap">
+      <a class="wordmark" href="index.html" aria-label="Simple Jev home"
+        ><img
+          class="brand-logo"
+          src="assets/simple-jev.png"
+          alt="Simple Jev"
+          width="64"
+          height="64" /></a
+      ><a
+        class="built-by"
+        href="https://featherless.ai/"
+        aria-label="Built by Featherless.ai"
+        ><span>Built by</span
+        ><img
+          src="assets/featherless.png"
+          alt="Featherless.ai"
+          width="156"
+          height="51"
+      /></a>
+      <div>
+        <a href="https://github.com/featherless-ai/simple-jev"
+          >Source & docs ↗</a
+        ><a href="https://featherless.ai/">Featherless ↗</a>
+      </div>
+    </footer>
+  </body>
+</html>

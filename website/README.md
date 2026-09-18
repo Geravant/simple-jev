@@ -33,6 +33,7 @@ Open the [playground](http://127.0.0.1:8765/) or the [API documentation](http://
 
 ## Files
 
+- `demos.html`: community spotlight and links to preselected playground scenarios.
 - `index.html`: homepage, API example, and link to the playground.
 - `playground.html`: dedicated interactive editor and results page.
 - `syntax.js`: safe syntax highlighting for static examples and live JSON.
@@ -50,13 +51,13 @@ Open the [playground](http://127.0.0.1:8765/) or the [API documentation](http://
 
 The client uses `https://simple-jev-demo-api.featherless.ai/v1/models` and `/v1/classifier`, with Gemma selected initially. The model list is fetched on load. Context is sent only after a visitor presses Run (or explicitly invokes the page's `run_classifier` WebMCP tool).
 
-The API allows cross-origin browser requests and requires no authentication. The page displays the demo's 2k-token context and 2 RPS limits. A 1,200-character input cap is a UI convenience, not a token-count guarantee; the API enforces its real context limit. Requests time out after 45 seconds, double submission is blocked, and HTTP 429 activates a retry cooldown. The page never fabricates a successful response when the API fails.
+The API allows cross-origin browser requests and requires no authentication. The page displays the demo's 2k-token context and 4 RPS limits. A 1,200-character input cap is a UI convenience, not a token-count guarantee; the API enforces its real context limit. Requests time out after 45 seconds, double submission is blocked, and HTTP 429 activates a retry cooldown. The page never fabricates a successful response when the API fails.
 
 The optional, feature-detected WebMCP tools share the visible UI actions: `stage_classifier_message` only edits the form, while `run_classifier` sends the request. Unsupported browsers ignore this integration. No analytics, local storage, or client-side secret is used. The public API's own data handling is separate from this page.
 
 ## Hosting
 
-Serve this folder's public files from any static host and point `simple-jev.com` to that host when ready. There is no build step. Deploy `index.html`, `playground.html`, `syntax.js`, `styles.css`, `demo.js`, `playground.mjs`, `docs.html`, `docs.css`, `docs.js`, and `assets/`; the README is not needed. Use HTTPS. This work does not configure DNS or publish the domain.
+Serve this folder's public files from any static host and point `simple-jev.com` to that host when ready. There is no build step. Deploy `index.html`, `demos.html`, `playground.html`, `syntax.js`, `styles.css`, `demo.js`, `playground.mjs`, `docs.html`, `docs.css`, `docs.js`, and `assets/`; the README is not needed. Use HTTPS. This work does not configure DNS or publish the domain.
 
 The live API model list and one real classification were checked during development. The static page also includes loading, validation, network-error, and rate-limit handling. Classification correctness depends on the selected model; demo outputs are not benchmark results.
 
@@ -71,3 +72,11 @@ On 2026-09-18, the original App outage preset reproduced an API-side error with 
 | All three together       | HTTP 422: `Expected nine finite logits` |
 
 The combined browser request also returned `Expected one finite logit per choice` on a later attempt. These are API-side answer-scoring failures; the underlying serving bug has not been established. The successful isolated requests above are observations, not a guarantee that isolated calls always succeed. The page preserves the error JSON for inspection/copying and distinguishes this scoring error from a context-length problem. It does not silently switch models, replace Noul with another question type, or manufacture scores. Other inputs, including the Double charge preset, have returned successfully on Gemma.
+
+## Production playground connection
+
+Select Production, enter a Featherless API key, and run a classification. Both modes use the public demo’s `/v1/models` catalog without authentication. Production classification uses `https://api.featherless.ai/v1/classifier` with Bearer authentication. The refresh button reloads the shared demo model list. The key stays in page memory, is excluded from the JSON inspector and copy controls, and is cleared when returning to the demo. Authenticated requests reject redirects. No key is saved to browser storage. Production requests use the account’s limits and billing; the playground retains its 1,200-character and six-question UI caps. Production authentication requires your own key and was not live-tested with an account credential.
+
+## Playable driving demo
+
+Open [Simple Jev Pilot](http://127.0.0.1:8765/cool-demo/drive/) or use the Cool demos page. It adapts Standard Agents’ JevPilot to our public classifier API. Manual driving, three worlds, AI autopilot, and JSON inspection are available. Source and rebuild instructions are in `demos/jevpilot/README.md`; include `website/cool-demo/drive/` in static deployment. This demo has its own Vite build; other website pages remain build-free.

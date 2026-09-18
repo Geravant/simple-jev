@@ -37,6 +37,7 @@
           height="51"
       /></a>
       <nav aria-label="Main navigation">
+        <a class="demos-nav" href="demos.html">Cool demos</a>
         <a href="playground.html" class="playground-nav">Playground</a>
         <a class="docs-link" href="docs.html">API docs</a>
         <a href="#how-it-works">How it works</a>
@@ -80,7 +81,7 @@
       <section class="quick-api wrap" aria-labelledby="quick-api-title">
         <div class="quick-api-heading">
           <h2 id="quick-api-title">Try the demo API in one request</h2>
-          <span>No login. No API key. (Limited to 2k context, and 2 RPS)</span>
+          <span>No login. No API key. (Limited to 2k context, and 4 RPS)</span>
         </div>
         <div class="quick-api-grid">
           <div class="docs-code">
@@ -105,7 +106,8 @@
     }
   }&#x27;
 
-## For production usage and higher rate limits, please signup for a developer account at https://featherless.ai</code></pre>
+## For production usage and higher rate limits,
+## please signup for a developer account at https://featherless.ai</code></pre>
           </div>
           <div class="docs-code">
             <div class="quick-code-heading">
@@ -127,7 +129,7 @@
         </div>
         <p class="quick-api-note">
           Actual Gemma response, showing the <code>answers</code> field. Results
-          may vary. Demo limits: 2k tokens · 2 requests/second.
+          may vary. Demo limits: 2k tokens · 4 requests/second.
           <a href="docs.html">Full API documentation ↗</a>
         </p>
         <span class="sr-only" id="docs-copy-status" role="status"></span>
@@ -276,9 +278,21 @@
           <h2 id="production-title">Intelligence too cheap to meter.</h2>
           <p>
             Simple Jev models on Featherless start at
-            <strong>$0.03 per million tokens</strong>, with higher limits on
-            paid plans.<br />Support for hosted fine-tuned models and
-            fine-tuning is on the way as usage grows.
+            <strong>$0.03 per million input tokens</strong>, with higher limits
+            on developer plans. Currently in beta.<br />Support for hosted
+            fine-tuned models and fine-tuning is on the way as usage grows.
+          </p>
+          <p>
+            <a href="docs.html#production">View per-model beta pricing ↗</a>
+          </p>
+          <p>
+            <small
+              >*Prices may change after beta. Refer to
+              <a href="https://featherless.ai/"
+                >Featherless.ai official pricing</a
+              >
+              for up-to-date information.</small
+            >
           </p>
         </div>
         <a class="production-button" href="https://featherless.ai/"

@@ -7,7 +7,18 @@ import {
   buildQuestions,
   validateResponse,
 } from "./playground.mjs";
-const API_BASE = "https://simple-jev-demo-api.featherless.ai/v1";
+const DEMO_BASE = "https://simple-jev-demo-api.featherless.ai/v1";
+const PRODUCTION_BASE = "https://api.featherless.ai/v1";
+function connection() {
+  const production = $("api-environment").value === "production";
+  const key = production ? $("api-key").value.trim() : "";
+  if (production && !key) throw new Error("Enter your production API key.");
+  return {
+    base: production ? PRODUCTION_BASE : DEMO_BASE,
+    headers: key ? { Authorization: `Bearer ${key}` } : {},
+  };
+}
+let connectionRevision = 0;
 const DEFAULT_MODEL = "featherless-ai/gemma-4-26B-A4B-classifier";
 const $ = (id) => document.getElementById(id);
 const pretty = (value) => JSON.stringify(value, null, 2);
@@ -207,6 +218,7 @@ function renderEditor(openUid = null) {
 function loadScenario(key) {
   if (state.busy) return;
   state.scenario = key;
+  $("scenario").value = key;
   state.questions = [];
   for (const template of SCENARIOS[key].questions)
     state.questions.push(newQuestion(template));
@@ -363,6 +375,7 @@ async function runClassifier() {
   if (state.busy) throw new Error("A request is already running.");
   let request;
   try {
+    connection();
     request = currentRequest();
   } catch (error) {
     $("builder-error").textContent = error.message;
@@ -394,9 +407,11 @@ async function runClassifier() {
   const timeout = window.setTimeout(() => controller.abort(), 45000);
   const started = performance.now();
   try {
-    const response = await fetch(`${API_BASE}/classifier`, {
+    const endpoint = connection();
+    const response = await fetch(`${endpoint.base}/classifier`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...endpoint.headers },
+      redirect: "error",
       body: JSON.stringify(request),
       signal: controller.signal,
       credentials: "omit",
@@ -416,7 +431,7 @@ async function runClassifier() {
           Date.now() +
           (Number.isFinite(retry) && retry > 0 ? retry * 1000 : 3000);
         throw new Error(
-          "The public demo is busy (2 requests per second). Wait a moment, then try again.",
+          "API rate limit reached. Wait a moment, then try again.",
         );
       }
       if (
@@ -442,7 +457,9 @@ async function runClassifier() {
         );
       }
       throw new Error(
-        `The demo is temporarily unavailable (HTTP ${response.status}). Please try again shortly.`,
+        response.status === 401 || response.status === 403
+          ? "Authentication failed. Check your production API key and account access."
+          : `The API is temporarily unavailable (HTTP ${response.status}). Please try again shortly.`,
       );
     }
     validateResponse(data, request);
@@ -453,7 +470,7 @@ async function runClassifier() {
       error.name === "AbortError"
         ? "The model took too long to respond. Please try again."
         : error instanceof TypeError
-          ? "Could not reach the demo. Check your connection and try again."
+          ? "Could not reach the API. Check your connection and try again."
           : error.message;
     $("error-message").textContent = message;
     $("error-message").hidden = false;
@@ -467,14 +484,21 @@ async function runClassifier() {
 }
 
 async function loadModels() {
+  const revision = ++connectionRevision;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(`${API_BASE}/models`, {
+    // Both environments intentionally share the public demo model catalog.
+    // Model discovery never needs or sends the production key.
+    const response = await fetch(`${DEMO_BASE}/models`, {
+      redirect: "error",
       signal: controller.signal,
       credentials: "omit",
     });
-    if (!response.ok) throw new Error("Model list unavailable");
+    if (!response.ok)
+      throw new Error(
+        `Demo model list unavailable (HTTP ${response.status}). Try refreshing the list.`,
+      );
     const data = await response.json();
     const ids = [
       ...new Set(
@@ -485,7 +509,8 @@ async function loadModels() {
     ];
     if (!ids.length) throw new Error("No models available");
     // Don't change the selection halfway through a request if model discovery is slow.
-    if (state.busy) return;
+    if (state.busy || revision !== connectionRevision) return;
+    $("model-notice").hidden = true;
     const previousModel = $("model").value;
     $("model").replaceChildren(
       ...ids.map((id) => {
@@ -501,14 +526,40 @@ async function loadModels() {
     $("model").value = ids.includes(previousModel) ? previousModel : ids[0];
     if ($("model").value !== previousModel) clearResults();
     syncRequest();
-  } catch {
-    $("model-notice").textContent =
-      "Couldn’t refresh the model list. You can still try the default Gemma model.";
+  } catch (error) {
+    if (revision !== connectionRevision) return;
+    $("model-notice").textContent = error.message;
     $("model-notice").hidden = false;
   } finally {
     clearTimeout(timeout);
   }
 }
+
+$("api-environment").addEventListener("change", () => {
+  connectionRevision++;
+  const production = $("api-environment").value === "production";
+  $("production-settings").hidden = !production;
+  $("connection-note").textContent = production
+    ? "Running sends your text to the production Featherless API using your account."
+    : "Running sends your text to the public Featherless demo.";
+  $("connection-limits").textContent = production
+    ? "PRODUCTION · Your account’s model and rate limits apply. Playground cap: 1,200 characters / 6 questions."
+    : "PUBLIC DEMO · 2k-token context · 4 requests / second";
+  $("api-base-note").textContent =
+    `API base: ${production ? PRODUCTION_BASE : DEMO_BASE}`;
+  $("model-notice").hidden = true;
+  clearResults();
+  syncRequest();
+  if (!production) {
+    $("api-key").value = "";
+  }
+  loadModels();
+});
+$("api-key").addEventListener("input", () => {
+  clearResults();
+  syncRequest();
+});
+$("connect-production").addEventListener("click", loadModels);
 
 $("demo-form").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -566,7 +617,12 @@ $("copy-response").addEventListener("click", (event) => {
   if (state.rawResponse !== null)
     copyText(event.currentTarget, pretty(state.rawResponse));
 });
-loadScenario("support");
+const initialScenario = new URLSearchParams(window.location.search).get(
+  "scenario",
+);
+loadScenario(
+  Object.hasOwn(SCENARIOS, initialScenario) ? initialScenario : "support",
+);
 loadModels();
 
 // Optional agent actions use the same validated builder as the visible form.

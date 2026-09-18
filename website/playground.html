@@ -38,6 +38,7 @@
           height="51"
       /></a>
       <nav aria-label="Main navigation">
+        <a class="demos-nav" href="demos.html">Cool demos</a>
         <a href="playground.html" class="playground-nav" aria-current="page"
           >Playground</a
         >
@@ -134,7 +135,7 @@ Hey, I was charged twice for my Pro subscription this month. Could you refund th
               </button>
             </div>
             <p class="editor-hint">
-              Up to 6 questions here. The 2k-token API limit includes all
+              Up to 6 questions here. API context limits include all
               instructions and context.
             </p>
             <p
@@ -143,6 +144,41 @@ Hey, I was charged twice for my Pro subscription this month. Could you refund th
               role="status"
               hidden
             ></p>
+            <div class="connection-controls">
+              <label for="api-environment">API connection</label>
+              <select id="api-environment">
+                <option value="demo">Public demo · no key</option>
+                <option value="production">
+                  Production · api.featherless.ai
+                </option>
+              </select>
+              <div id="production-settings" hidden>
+                <label for="api-key">Production API key</label>
+                <input
+                  id="api-key"
+                  type="password"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Enter your Featherless API key"
+                />
+                <button
+                  type="button"
+                  id="connect-production"
+                  class="editor-button"
+                >
+                  Refresh demo model list
+                </button>
+                <p class="editor-hint">
+                  Kept only in memory for this page. Sent only to
+                  https://api.featherless.ai. Production requests use your
+                  account and may incur charges. Both modes currently use the
+                  demo’s model list.
+                  <a href="https://featherless.ai/"
+                    >Get a developer account ↗</a
+                  >
+                </p>
+              </div>
+            </div>
             <div class="run-controls">
               <div class="model-control">
                 <label for="model">Model</label
@@ -157,7 +193,7 @@ Hey, I was charged twice for my Pro subscription this month. Could you refund th
                 ><span aria-hidden="true">↗</span>
               </button>
             </div>
-            <p class="privacy-note">
+            <p class="privacy-note" id="connection-note">
               Running sends your text to the public Featherless demo.
             </p>
             <p class="model-notice" id="model-notice" hidden></p>
@@ -185,8 +221,10 @@ Hey, I was charged twice for my Pro subscription this month. Could you refund th
         </div>
         <div class="demo-footnote">
           <p>
-            <span class="limit-label">PUBLIC DEMO</span> 2k-token context · 2
-            requests / second
+            <span id="connection-limits"
+              ><span class="limit-label">PUBLIC DEMO</span> 2k-token context · 4
+              requests / second</span
+            >
           </p>
           <p>Scores reflect model preferences, not calibrated certainty.</p>
         </div>
@@ -231,7 +269,7 @@ Hey, I was charged twice for my Pro subscription this month. Could you refund th
 Run the classifier to inspect its actual JSON response.</pre>
             </section>
           </div>
-          <p class="api-base">
+          <p class="api-base" id="api-base-note">
             API base:
             <a href="https://simple-jev-demo-api.featherless.ai/v1/models"
               >https://simple-jev-demo-api.featherless.ai/v1/</a

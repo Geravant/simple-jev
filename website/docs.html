@@ -37,6 +37,7 @@
           height="51"
       /></a>
       <nav aria-label="Main navigation">
+        <a class="demos-nav" href="demos.html">Cool demos</a>
         <a href="playground.html">Playground</a
         ><a class="docs-link" href="docs.html" aria-current="page">API docs</a>
         <a href="index.html#how-it-works">How it works</a>
@@ -68,14 +69,25 @@
           <p class="eyebrow">BUILD WITH SIMPLE JEV</p>
           <h1>API documentation.</h1>
           <p>Context and questions in. Structured decisions out.</p>
-          <a
-            class="docs-base"
-            href="https://simple-jev-demo-api.featherless.ai/v1/models"
-            >https://simple-jev-demo-api.featherless.ai/v1/</a
-          >
+          <p>
+            <strong>Demo · POST</strong><br />
+            <a
+              class="docs-base"
+              href="https://simple-jev-demo-api.featherless.ai/v1/classifier"
+              >https://simple-jev-demo-api.featherless.ai/v1/classifier</a
+            >
+          </p>
+          <p>
+            <strong>Production · POST</strong><br />
+            <a class="docs-base" href="https://api.featherless.ai/v1/classifier"
+              >https://api.featherless.ai/v1/classifier</a
+            ><br />
+            Requires a production API key:
+            <code>Authorization: Bearer YOUR_API_KEY</code>.
+          </p>
           <div class="docs-badges">
             <span>No demo API key</span><span>2k-token context</span
-            ><span>2 requests / second</span>
+            ><span>4 requests / second</span>
           </div>
           <p>
             This page covers the public demo’s client-facing interface and
@@ -190,7 +202,7 @@ JSON</code></pre>
           </div>
           <p>
             The public demo has a <strong>2k-token context limit</strong> and a
-            <strong>2 requests-per-second rate limit</strong>. The context
+            <strong>4 requests-per-second rate limit</strong>. The context
             budget includes the classifier instructions, questions, criteria,
             and model chat formatting—not just your text. Short inputs and
             focused question sets work best.
@@ -538,8 +550,8 @@ JSON</code></pre>
             </div>
             <pre
               tabindex="0"
-            ><code>const base = &quot;https://simple-jev-demo-api.featherless.ai/v1&quot;;
-const response = await fetch(`${base}/classifier`, {
+            ><code>const endpoint = &quot;https://simple-jev-demo-api.featherless.ai/v1/classifier&quot;;
+const response = await fetch(endpoint, {
   method: &quot;POST&quot;,
   headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
   body: JSON.stringify({
@@ -748,13 +760,80 @@ python hf-server/hf_server.py \
         <section class="docs-section" id="production">
           <h2>Scaling into Production</h2>
           <p>
-            For production, Simple Jev models on
-            <a href="https://featherless.ai/">Featherless</a> start at
-            <strong>$0.03 per million tokens</strong>, with higher limits on
-            paid plans. Hosted fine-tuned models and fine-tuning are planned as
-            support and usage grow. Use your production account’s connection
-            details rather than treating this public demo as a production
-            endpoint.
+            Send the same classifier request body to
+            <a href="https://api.featherless.ai/v1/classifier"
+              >https://api.featherless.ai/v1/classifier</a
+            >
+            with your production key in the
+            <code>Authorization: Bearer YOUR_API_KEY</code> header. Keep
+            <code>Content-Type: application/json</code>. Production limits and
+            billing follow your account.
+          </p>
+          <p>
+            Simple Jev is currently in
+            <strong>beta on Featherless developer plans</strong>, with higher
+            limits for production usage.
+          </p>
+          <h3>Beta pricing</h3>
+          <div class="docs-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Model ID</th>
+                  <th scope="col">Input token price (per million)</th>
+                  <th scope="col">Images &amp; vision</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>featherless-ai/RWKV-small-classifier</code></td>
+                  <td>$0.03</td>
+                  <td>Text only</td>
+                </tr>
+                <tr>
+                  <td><code>featherless-ai/RWKV-mid-classifier</code></td>
+                  <td>$0.10</td>
+                  <td>Text only</td>
+                </tr>
+                <tr>
+                  <td><code>featherless-ai/RWKV-std-classifier</code></td>
+                  <td>$0.20</td>
+                  <td>Text only</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>featherless-ai/gemma-4-26B-A4B-classifier</code>
+                  </td>
+                  <td>$0.28</td>
+                  <td>Supported</td>
+                </tr>
+                <tr>
+                  <td>
+                    <code>featherless-ai/Qwen3.6-35B-A3B-classifier</code>
+                  </td>
+                  <td>$0.28</td>
+                  <td>Supported</td>
+                </tr>
+                <tr>
+                  <td><code>featherless-ai/Qwen3.8-27B-classifier</code></td>
+                  <td>$0.30</td>
+                  <td>Supported</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <small
+              >*Prices may change after beta. Refer to
+              <a href="https://featherless.ai/"
+                >Featherless.ai official pricing</a
+              >
+              for up-to-date information.</small
+            >
+          </p>
+          <p>
+            Hosted fine-tuned models and fine-tuning are planned as support and
+            usage grow.
           </p>
         </section>
       </article>
