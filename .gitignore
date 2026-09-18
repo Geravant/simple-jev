@@ -1,0 +1,6 @@
+.*
+
+# For now
+hf-server
+
+!.git*
