@@ -1,0 +1,221 @@
+.docs-layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 60px;
+  align-items: start;
+  padding-block: 48px 72px;
+}
+.docs-sidebar {
+  position: sticky;
+  top: 25px;
+}
+.docs-sidebar nav {
+  display: grid;
+  gap: 3px;
+}
+.docs-sidebar nav > a {
+  font-size: 14px;
+  padding: 7px 10px;
+  border-left: 2px solid var(--line);
+  color: var(--muted);
+}
+.docs-sidebar nav > a:hover {
+  color: var(--ink);
+  border-left-color: #93b755;
+  background: #eef4e5;
+}
+.docs-sidebar .section-number {
+  margin: 0 0 12px 10px;
+}
+.docs-intro h1 {
+  font-size: 48px;
+  letter-spacing: -2px;
+  margin: 15px 0;
+}
+.docs-intro > p {
+  font-size: 17px;
+  line-height: 1.7;
+}
+.docs-intro > p:last-child {
+  font-size: 15px;
+}
+.docs-base {
+  display: block;
+  font: 14px/1.7 var(--mono);
+  overflow-wrap: anywhere;
+  margin: 20px 0 12px;
+}
+.docs-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.docs-badges span {
+  font-size: 12px;
+  padding: 4px 9px;
+  background: #e9f1de;
+  border: 1px solid #d2dfc1;
+  border-radius: 4px;
+}
+.docs-section {
+  padding-top: 35px;
+  margin-top: 35px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 25px;
+}
+.docs-section h2 {
+  font-size: 27px;
+  margin-bottom: 20px;
+}
+.docs-section h3 {
+  font-size: 18px;
+  margin: 26px 0 14px;
+}
+.docs-section p {
+  font-size: 16px;
+  line-height: 1.8;
+  margin: 15px 0;
+  overflow-wrap: anywhere;
+}
+.docs-section p a,
+.docs-intro p a {
+  color: #496334;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.docs-section :not(pre) > code {
+  font: 13px var(--mono);
+  padding: 2px 4px;
+  background: #eaf0e2;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+  color: #304626;
+}
+.docs-code {
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1d2926;
+  color: #edf3e7;
+}
+.docs-code > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  border-bottom: 1px solid #3b4942;
+}
+.docs-code > div span {
+  font: 12px var(--mono);
+  color: #c4ef63;
+}
+.copy-code {
+  background: transparent;
+  border: 1px solid #53634d;
+  color: #edf3e7;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.docs-code pre {
+  max-height: none;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.table-scroll {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  margin: 18px 0;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  text-align: left;
+  background: #fff;
+}
+th,
+td {
+  padding: 13px 15px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  min-width: 100px;
+}
+th {
+  background: #ecf2e5;
+  font-weight: 600;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+td:last-child {
+  min-width: 230px;
+  color: #5e6c56;
+}
+.docs-section .docs-caption {
+  font-size: 13px;
+}
+.site-header [aria-current="page"] {
+  color: #59753c;
+}
+.inspector-docs {
+  font-size: 12px;
+  color: #c4ef63;
+  text-decoration: underline;
+}
+@media (max-width: 1000px) {
+  .docs-layout {
+    gap: 32px;
+    grid-template-columns: 165px minmax(0, 1fr);
+  }
+  .site-header nav {
+    gap: 18px;
+  }
+}
+@media (max-width: 760px) {
+  .docs-layout {
+    display: block;
+    padding-top: 25px;
+  }
+  .docs-sidebar {
+    position: static;
+    margin-bottom: 30px;
+  }
+  .docs-sidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .docs-sidebar .section-number {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .docs-sidebar nav > a {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+  }
+  .docs-intro h1 {
+    font-size: 37px;
+  }
+  .docs-intro > p {
+    font-size: 16px;
+  }
+  .docs-section {
+    margin-top: 26px;
+    padding-top: 26px;
+  }
+  .docs-code pre {
+    padding: 15px;
+    font-size: 12px;
+  }
+  .site-header nav {
+    gap: 12px;
+  }
+  .site-header nav a.docs-link {
+    display: inline-flex;
+  }
+}

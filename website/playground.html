@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f9f6" />
+    <meta
+      name="description"
+      content="Turn context into structured decisions with open language models. Try Simple Jev's live classifier demo, explore the API, and train a model for your task."
+    />
+    <title>Playground — Simple Jev</title>
+    <link rel="icon" type="image/png" href="assets/simple-jev.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="demo.js"></script>
+    <script src="docs.js" defer></script>
+    <script src="syntax.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#playground">Skip to demo</a>
+    <header class="site-header wrap">
+      <a class="wordmark" href="index.html" aria-label="Simple Jev home"
+        ><img
+          class="brand-logo"
+          src="assets/simple-jev.png"
+          alt="Simple Jev"
+          width="64"
+          height="64"
+      /></a>
+      <a
+        class="built-by header-credit"
+        href="https://featherless.ai/"
+        aria-label="Built by Featherless.ai"
+        ><span>Built by</span
+        ><img
+          src="assets/featherless.png"
+          alt="Featherless.ai"
+          width="156"
+          height="51"
+      /></a>
+      <nav aria-label="Main navigation">
+        <a href="playground.html" class="playground-nav" aria-current="page"
+          >Playground</a
+        >
+        <a class="docs-link" href="docs.html">API docs</a>
+        <a href="index.html#how-it-works">How it works</a>
+        <a href="index.html#rfdt">RFDT</a>
+        <a
+          class="nav-github"
+          href="https://github.com/featherless-ai/simple-jev"
+          >GitHub <span aria-hidden="true">↗</span></a
+        >
+      </nav>
+    </header>
+
+    <main class="playground-page">
+      <section
+        class="demo-section wrap"
+        id="playground"
+        aria-labelledby="demo-title"
+      >
+        <div class="demo-heading">
+          <div>
+            <span class="section-number">01 / TRY IT</span>
+            <h2 id="demo-title">Your context. Your questions.</h2>
+          </div>
+          <span class="access-note">No sign-up. No API key.</span>
+        </div>
+        <div class="playground">
+          <form class="input-panel" id="demo-form">
+            <div class="panel-heading">
+              <h3><span class="panel-number">01</span> Build your request</h3>
+            </div>
+            <div class="scenario-controls">
+              <div>
+                <label for="scenario">Start with a scenario</label
+                ><select id="scenario">
+                  <option value="support">Customer support</option>
+                  <option value="reviews">Product reviews</option>
+                  <option value="moderation">Community moderation</option>
+                </select>
+              </div>
+              <button type="button" id="load-scenario" class="editor-button">
+                Load example
+              </button>
+            </div>
+            <p class="editor-hint">
+              Loading a scenario replaces the context and questions.
+            </p>
+            <label class="field-label" for="context">Context</label>
+            <div
+              class="presets"
+              id="context-presets"
+              aria-label="Example contexts"
+            ></div>
+            <textarea
+              id="context"
+              name="context"
+              maxlength="1200"
+              required
+              spellcheck="false"
+              aria-describedby="input-hint"
+            >
+Hey, I was charged twice for my Pro subscription this month. Could you refund the extra payment? Everything else is working great.</textarea>
+            <div class="input-meta">
+              <span id="input-hint">Edit the message. See what changes.</span
+              ><span id="character-count">126 / 1,200</span>
+            </div>
+            <div class="builder-heading">
+              <h3>Questions <span id="question-count"></span></h3>
+              <span class="editor-hint">Expand to edit</span>
+            </div>
+            <div id="question-editor"></div>
+            <div class="add-question-controls">
+              <div>
+                <label for="question-example">Add a question</label
+                ><select id="question-example">
+                  <optgroup label="Common questions">
+                    <option value="routing">Route to a team · Choice</option>
+                    <option value="urgency">Urgency · Score</option>
+                    <option value="refund">Refund requested · Noul</option>
+                    <option value="sentiment">Sentiment · Choice</option>
+                    <option value="quality">Review usefulness · Score</option>
+                    <option value="spam">Spam detection · Noul</option>
+                  </optgroup>
+                  <optgroup label="Write your own">
+                    <option value="custom_choice">Custom choice</option>
+                    <option value="custom_score">Custom score</option>
+                    <option value="custom_noul">Custom yes/no judgment</option>
+                  </optgroup>
+                </select>
+              </div>
+              <button type="button" class="editor-button" id="add-question">
+                + Add
+              </button>
+            </div>
+            <p class="editor-hint">
+              Up to 6 questions here. The 2k-token API limit includes all
+              instructions and context.
+            </p>
+            <p
+              class="builder-error"
+              id="builder-error"
+              role="status"
+              hidden
+            ></p>
+            <div class="run-controls">
+              <div class="model-control">
+                <label for="model">Model</label
+                ><select id="model" name="model">
+                  <option value="featherless-ai/gemma-4-26B-A4B-classifier">
+                    Gemma 4 · 26B A4B
+                  </option>
+                </select>
+              </div>
+              <button class="run-button" id="run-button" type="submit">
+                <span id="run-label">Run classifier</span
+                ><span aria-hidden="true">↗</span>
+              </button>
+            </div>
+            <p class="privacy-note">
+              Running sends your text to the public Featherless demo.
+            </p>
+            <p class="model-notice" id="model-notice" hidden></p>
+          </form>
+
+          <section
+            class="output-panel"
+            aria-labelledby="output-title"
+            aria-busy="false"
+          >
+            <div class="panel-heading">
+              <h3 id="output-title">
+                <span class="panel-number">02</span> The decisions
+              </h3>
+              <span class="result-source" id="result-source">Ready to run</span>
+            </div>
+            <div id="decision-results" class="dynamic-results"></div>
+            <div class="result-footer">
+              <span id="result-status" role="status" aria-live="polite"
+                >Edit your questions, then run the classifier.</span
+              ><span class="elapsed" id="elapsed"></span>
+            </div>
+            <p id="error-message" class="error-message" role="alert" hidden></p>
+          </section>
+        </div>
+        <div class="demo-footnote">
+          <p>
+            <span class="limit-label">PUBLIC DEMO</span> 2k-token context · 2
+            requests / second
+          </p>
+          <p>Scores reflect model preferences, not calibrated certainty.</p>
+        </div>
+        <noscript
+          ><p class="error-message">
+            Enable JavaScript to run the live demo. You can also use the API
+            directly from the GitHub documentation.
+          </p></noscript
+        >
+        <details class="api-inspector" id="api-details">
+          <summary>
+            <span class="mono">{ }</span> Under the hood
+            <span class="inspector-description"
+              >The exact request and response</span
+            ><span class="disclosure-icon" aria-hidden="true">+</span>
+          </summary>
+          <div class="code-grid">
+            <section>
+              <div class="code-heading">
+                <h3>POST /v1/classifier</h3>
+                <a class="inspector-docs" href="docs.html">API reference ↗</a>
+                <button type="button" id="copy-request">Copy request</button>
+              </div>
+              <pre
+                id="request-code"
+                tabindex="0"
+                aria-label="JSON API request"
+              ></pre>
+            </section>
+            <section>
+              <div class="code-heading">
+                <h3 id="response-code-title">Response</h3>
+                <button type="button" id="copy-response" disabled>
+                  Copy response
+                </button>
+              </div>
+              <pre
+                id="response-code"
+                tabindex="0"
+                aria-label="JSON API response"
+              >
+Run the classifier to inspect its actual JSON response.</pre>
+            </section>
+          </div>
+          <p class="api-base">
+            API base:
+            <a href="https://simple-jev-demo-api.featherless.ai/v1/models"
+              >https://simple-jev-demo-api.featherless.ai/v1/</a
+            >
+          </p>
+          <span class="sr-only" id="copy-status" role="status"></span>
+        </details>
+      </section>
+    </main>
+    <footer class="wrap">
+      <a class="wordmark" href="index.html" aria-label="Simple Jev home"
+        ><img
+          class="brand-logo"
+          src="assets/simple-jev.png"
+          alt="Simple Jev"
+          width="64"
+          height="64" /></a
+      ><a
+        class="built-by"
+        href="https://featherless.ai/"
+        aria-label="Built by Featherless.ai"
+        ><span>Built by</span
+        ><img
+          src="assets/featherless.png"
+          alt="Featherless.ai"
+          width="156"
+          height="51"
+      /></a>
+      <div>
+        <a href="https://github.com/featherless-ai/simple-jev"
+          >Source & docs ↗</a
+        ><a href="https://featherless.ai/">Featherless ↗</a>
+      </div>
+    </footer>
+  </body>
+</html>

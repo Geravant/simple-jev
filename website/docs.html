@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Simple Jev API documentation: classifier requests, choice and score questions, Noul judgments, examples, limits, and troubleshooting."
+    />
+    <title>API documentation — Simple Jev</title>
+    <link rel="icon" type="image/png" href="assets/simple-jev.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="docs.css" />
+    <script src="docs.js" defer></script>
+    <script src="syntax.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#docs-content">Skip to API documentation</a>
+    <header class="site-header wrap">
+      <a class="wordmark" href="index.html" aria-label="Simple Jev home"
+        ><img
+          class="brand-logo"
+          src="assets/simple-jev.png"
+          alt="Simple Jev"
+          width="64"
+          height="64"
+      /></a>
+      <a
+        class="built-by header-credit"
+        href="https://featherless.ai/"
+        aria-label="Built by Featherless.ai"
+        ><span>Built by</span
+        ><img
+          src="assets/featherless.png"
+          alt="Featherless.ai"
+          width="156"
+          height="51"
+      /></a>
+      <nav aria-label="Main navigation">
+        <a href="playground.html">Playground</a
+        ><a class="docs-link" href="docs.html" aria-current="page">API docs</a>
+        <a href="index.html#how-it-works">How it works</a>
+        <a href="index.html#rfdt">RFDT</a>
+        <a
+          class="nav-github"
+          href="https://github.com/featherless-ai/simple-jev"
+          >GitHub <span aria-hidden="true">↗</span></a
+        >
+      </nav>
+    </header>
+    <main class="wrap docs-layout">
+      <aside class="docs-sidebar">
+        <nav aria-label="Documentation sections">
+          <p class="section-number">API REFERENCE</p>
+          <a href="#quickstart">Quick start</a
+          ><a href="#endpoints">Endpoints & limits</a
+          ><a href="#request">Request body</a><a href="#choice">Choice</a
+          ><a href="#score">Score</a><a href="#noul">Noul</a
+          ><a href="#context">Context & chat</a
+          ><a href="#clients">Client examples</a><a href="#errors">Errors</a
+          ><a href="#interpretation">Usage & versioning</a
+          ><a href="#self-hosting">Self-hosting &amp; Open Source</a>
+          <a href="#production">Scaling into Production</a>
+        </nav>
+      </aside>
+      <article id="docs-content">
+        <div class="docs-intro">
+          <p class="eyebrow">BUILD WITH SIMPLE JEV</p>
+          <h1>API documentation.</h1>
+          <p>Context and questions in. Structured decisions out.</p>
+          <a
+            class="docs-base"
+            href="https://simple-jev-demo-api.featherless.ai/v1/models"
+            >https://simple-jev-demo-api.featherless.ai/v1/</a
+          >
+          <div class="docs-badges">
+            <span>No demo API key</span><span>2k-token context</span
+            ><span>2 requests / second</span>
+          </div>
+          <p>
+            This page covers the public demo’s client-facing interface and
+            explains where the self-hosted HF implementation differs. Try your
+            requests in the
+            <a href="playground.html">question playground</a>.
+          </p>
+        </div>
+        <section class="docs-section" id="quickstart">
+          <h2>Make your first request</h2>
+          <p>
+            The public demo requires no login, API key, or Authorization header.
+            Start by discovering the available models, then send a classifier
+            request.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>bash</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre
+              tabindex="0"
+            ><code>curl https://simple-jev-demo-api.featherless.ai/v1/models</code></pre>
+          </div>
+          <p>
+            This example uses Gemma. You can replace its ID with any ID returned
+            by the model list.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>bash</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre
+              tabindex="0"
+            ><code>curl --fail-with-body https://simple-jev-demo-api.featherless.ai/v1/classifier \
+  -H &#x27;Content-Type: application/json&#x27; \
+  --data-binary @- &lt;&lt;&#x27;JSON&#x27;
+{
+  &quot;model&quot;: &quot;featherless-ai/gemma-4-26B-A4B-classifier&quot;,
+  &quot;state&quot;: &quot;Mia owns a red bicycle.&quot;,
+  &quot;questions&quot;: {
+    &quot;color&quot;: {
+      &quot;type&quot;: &quot;choice&quot;,
+      &quot;instructions&quot;: &quot;What color is Mia’s bicycle?&quot;,
+      &quot;criteria&quot;: {
+        &quot;red&quot;: null,
+        &quot;blue&quot;: null
+      }
+    }
+  }
+}
+JSON</code></pre>
+          </div>
+          <p>
+            A successful response looks like this. These numbers illustrate the
+            response format; they are not a promised result or measured token
+            count.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;model&quot;: &quot;featherless-ai/gemma-4-26B-A4B-classifier&quot;,
+  &quot;answers&quot;: {
+    &quot;color&quot;: {
+      &quot;type&quot;: &quot;choice&quot;,
+      &quot;choice&quot;: &quot;red&quot;,
+      &quot;confidence&quot;: 0.95,
+      &quot;probabilities&quot;: {
+        &quot;red&quot;: 0.95,
+        &quot;blue&quot;: 0.05
+      }
+    }
+  },
+  &quot;usage&quot;: {
+    &quot;input_tokens&quot;: 350,
+    &quot;output_tokens&quot;: 1
+  }
+}</code></pre>
+          </div>
+        </section>
+        <section class="docs-section" id="endpoints">
+          <h2>Endpoints & limits</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Path</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>GET</td>
+                  <td><code>/v1/models</code></td>
+                  <td>List the public demo’s available model IDs.</td>
+                </tr>
+                <tr>
+                  <td>POST</td>
+                  <td><code>/v1/classifier</code></td>
+                  <td>
+                    Evaluate questions against shared context. Returns
+                    non-streaming JSON.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            The public demo has a <strong>2k-token context limit</strong> and a
+            <strong>2 requests-per-second rate limit</strong>. The context
+            budget includes the classifier instructions, questions, criteria,
+            and model chat formatting—not just your text. Short inputs and
+            focused question sets work best.
+          </p>
+          <p>
+            The playground caps input at 1,200 characters and six questions for
+            convenience. Characters are not tokens, and those UI caps do not
+            replace the API’s limits.
+          </p>
+          <p>
+            The API permits cross-origin browser requests. Models can change;
+            use <code>/v1/models</code> rather than assuming the list is
+            permanent. Every response’s <code>model</code> identifies the
+            requested model.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;object&quot;: &quot;list&quot;,
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;featherless-ai/gemma-4-26B-A4B-classifier&quot;,
+      &quot;object&quot;: &quot;model&quot;
+    }
+  ]
+}</code></pre>
+          </div>
+          <p class="docs-caption">
+            Illustrative model-list excerpt. The live list can contain
+            additional models and metadata.
+          </p>
+        </section>
+        <section class="docs-section" id="request">
+          <h2>Request body</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>model</code></td>
+                  <td>string · required</td>
+                  <td>Exact model ID from the public model list.</td>
+                </tr>
+                <tr>
+                  <td><code>state</code></td>
+                  <td>string, object, or array</td>
+                  <td>
+                    Shared context. Supply this or <code>messages</code>, not
+                    both.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>messages</code></td>
+                  <td>array of text messages</td>
+                  <td>
+                    Chat history instead of state. Must contain at least one
+                    message.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>questions</code></td>
+                  <td>object · required</td>
+                  <td>
+                    One or more unique, nonempty IDs mapped to question
+                    definitions. IDs become keys in <code>answers</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>options</code></td>
+                  <td>object · optional</td>
+                  <td>
+                    Diagnostics, such as <code>raw_logits</code>, when supported
+                    and enabled by the serving implementation.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Each question has a <code>type</code> and an
+            <code>instructions</code> field. Criteria depend on its type. Plain
+            text is usually easiest; the shared schema also accepts JSON
+            objects, arrays, or null for instructions and criterion
+            descriptions.
+          </p>
+          <p>
+            In the shared request schema, unknown top-level fields are ignored,
+            while unknown question and option fields are rejected. Completion
+            settings such as <code>temperature</code>, <code>max_tokens</code>,
+            and <code>stream</code> do not configure classifier scoring. Omit
+            them.
+          </p>
+          <p>
+            Use text-only input for this demo. Do not send images, audio, tool
+            calls, or media options. <code>messages</code> supplies context;
+            this is not a chat-completions endpoint.
+          </p>
+        </section>
+        <section class="docs-section" id="choice">
+          <h2>Choice: select an answer</h2>
+          <p>
+            Use <code>choice</code> for routing, intent, sentiment, or any
+            decision among named candidates. Provide 2–50 candidates in the
+            shared schema. Each key is a public answer ID; its value is an
+            optional description.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;route&quot;: {
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;instructions&quot;: &quot;Which team should handle this message?&quot;,
+    &quot;criteria&quot;: {
+      &quot;billing&quot;: &quot;Payments and refunds&quot;,
+      &quot;technical&quot;: &quot;Bugs and outages&quot;,
+      &quot;account&quot;: null
+    }
+  }
+}</code></pre>
+          </div>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;route&quot;: {
+    &quot;type&quot;: &quot;choice&quot;,
+    &quot;choice&quot;: &quot;billing&quot;,
+    &quot;confidence&quot;: 0.8,
+    &quot;probabilities&quot;: {
+      &quot;billing&quot;: 0.8,
+      &quot;technical&quot;: 0.15,
+      &quot;account&quot;: 0.05
+    }
+  }
+}</code></pre>
+          </div>
+          <p>
+            The largest candidate probability determines <code>choice</code> and
+            <code>confidence</code>. Probabilities are normalized over the
+            supplied candidates. They do not measure the probability that the
+            answer is objectively correct. Candidate order controls internal
+            label assignment and resolves exact ties in v1.
+          </p>
+        </section>
+        <section class="docs-section" id="score">
+          <h2>Score: evaluate an ordered rubric</h2>
+          <p>
+            Use <code>score</code> for urgency, relevance, quality, or support
+            against an explicit rubric. Provide 2–50 levels in the shared
+            schema, ordered from lowest to highest.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;urgency&quot;: {
+    &quot;type&quot;: &quot;score&quot;,
+    &quot;instructions&quot;: &quot;How urgent is this request?&quot;,
+    &quot;criteria&quot;: [
+      &quot;Routine&quot;,
+      &quot;Important&quot;,
+      &quot;Critical&quot;
+    ]
+  }
+}</code></pre>
+          </div>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;urgency&quot;: {
+    &quot;type&quot;: &quot;score&quot;,
+    &quot;score&quot;: 1.75,
+    &quot;confidence&quot;: 0.8,
+    &quot;probabilities&quot;: {
+      &quot;0&quot;: 0.05,
+      &quot;1&quot;: 0.15,
+      &quot;2&quot;: 0.8
+    },
+    &quot;legend&quot;: {
+      &quot;0&quot;: &quot;Routine&quot;,
+      &quot;1&quot;: &quot;Important&quot;,
+      &quot;2&quot;: &quot;Critical&quot;
+    }
+  }
+}</code></pre>
+          </div>
+          <p>
+            The returned score is the
+            <strong>expected zero-based rubric index</strong>:
+            <code>sum(probability[i] × i)</code>. Here,
+            <code>0 × 0.05 + 1 × 0.15 + 2 × 0.8 = 1.75</code>. With three
+            levels, the range is 0–2, not 0–1 or 0–100.
+          </p>
+          <p>
+            <code>confidence</code> is the highest individual level probability,
+            not a confidence interval around the score. <code>legend</code> maps
+            numeric-string keys back to your rubric.
+          </p>
+        </section>
+        <section class="docs-section" id="noul">
+          <h2>Noul: judge a proposition</h2>
+          <p>
+            Use <code>noul</code> for a yes/no proposition, such as whether a
+            customer explicitly requests a refund. Optional criteria describe
+            what true and false mean.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;refund&quot;: {
+    &quot;type&quot;: &quot;noul&quot;,
+    &quot;instructions&quot;: &quot;Does the customer explicitly request a refund?&quot;,
+    &quot;criteria&quot;: {
+      &quot;true&quot;: &quot;The customer asks for money back.&quot;,
+      &quot;false&quot;: &quot;There is no explicit refund request.&quot;
+    }
+  }
+}</code></pre>
+          </div>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;refund&quot;: {
+    &quot;type&quot;: &quot;noul&quot;,
+    &quot;noul&quot;: 0.9
+  }
+}</code></pre>
+          </div>
+          <p>
+            The value lies between <strong>0.01 and 0.99</strong>, with higher
+            values indicating more support for “yes.” Noul has no separate
+            confidence field. In v1, it comes from the expected value of nine
+            rating bins, mapped to that range; it is not a softmax between two
+            binary answer tokens.
+          </p>
+          <p>
+            Treat it as a model judgment. If your application needs a yes/no
+            action, choose and evaluate a threshold on representative data
+            rather than assuming 0.5 is appropriate for every task.
+          </p>
+        </section>
+        <section class="docs-section" id="context">
+          <h2>State, chat history & multiple questions</h2>
+          <p>
+            <code>state</code> can be structured JSON when your application
+            already has a useful data object. It is serialized as context, not
+            executed.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;state&quot;: {
+    &quot;ticket&quot;: {
+      &quot;message&quot;: &quot;Charged twice&quot;,
+      &quot;plan&quot;: &quot;Pro&quot;
+    },
+    &quot;duplicate_payment_confirmed&quot;: true
+  }
+}</code></pre>
+          </div>
+          <p>
+            For a conversation, replace <code>state</code> with
+            <code>messages</code>. Send plain text content with roles supported
+            by the model’s chat template. The HF adapter supports system,
+            developer, user, and assistant roles, but a particular template may
+            impose further restrictions.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;model&quot;: &quot;featherless-ai/gemma-4-26B-A4B-classifier&quot;,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;I was charged twice.&quot;
+    },
+    {
+      &quot;role&quot;: &quot;assistant&quot;,
+      &quot;content&quot;: &quot;Would you like the duplicate charge refunded?&quot;
+    },
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;Yes, please.&quot;
+    }
+  ],
+  &quot;questions&quot;: {
+    &quot;refund&quot;: {
+      &quot;type&quot;: &quot;noul&quot;,
+      &quot;instructions&quot;: &quot;Does the customer want a refund?&quot;
+    }
+  }
+}</code></pre>
+          </div>
+          <p>
+            To ask several questions, put their definitions in the same
+            <code>questions</code> object under different IDs. They share the
+            context but do not consume one another’s answers. The server returns
+            all answers together. More questions and longer criteria consume
+            more of the context budget.
+          </p>
+        </section>
+        <section class="docs-section" id="clients">
+          <h2>JavaScript & Python</h2>
+          <p>
+            These clients call the public demo directly, without credentials.
+            Keep production credentials on your server if your production
+            service requires them.
+          </p>
+          <h3>JavaScript</h3>
+          <div class="docs-code">
+            <div>
+              <span>javascript</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre
+              tabindex="0"
+            ><code>const base = &quot;https://simple-jev-demo-api.featherless.ai/v1&quot;;
+const response = await fetch(`${base}/classifier`, {
+  method: &quot;POST&quot;,
+  headers: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+  body: JSON.stringify({
+    model: &quot;featherless-ai/gemma-4-26B-A4B-classifier&quot;,
+    state: &quot;The bicycle is red.&quot;,
+    questions: {
+      color: {
+        type: &quot;choice&quot;,
+        instructions: &quot;What color is the bicycle?&quot;,
+        criteria: { red: null, blue: null }
+      }
+    }
+  }),
+  signal: AbortSignal.timeout(45000)
+});
+const result = await response.json();
+if (!response.ok) {
+  throw new Error(result.error?.message ?? result.detail ?? `HTTP ${response.status}`);
+}
+console.log(result.answers.color.choice);</code></pre>
+          </div>
+          <h3>Python · standard library</h3>
+          <div class="docs-code">
+            <div>
+              <span>python</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>import json
+import urllib.request
+import urllib.error
+
+payload = {
+    &quot;model&quot;: &quot;featherless-ai/gemma-4-26B-A4B-classifier&quot;,
+    &quot;state&quot;: &quot;The bicycle is red.&quot;,
+    &quot;questions&quot;: {
+        &quot;color&quot;: {
+            &quot;type&quot;: &quot;choice&quot;,
+            &quot;instructions&quot;: &quot;What color is the bicycle?&quot;,
+            &quot;criteria&quot;: {&quot;red&quot;: None, &quot;blue&quot;: None},
+        }
+    },
+}
+request = urllib.request.Request(
+    &quot;https://simple-jev-demo-api.featherless.ai/v1/classifier&quot;,
+    data=json.dumps(payload).encode(&quot;utf-8&quot;),
+    headers={&quot;Content-Type&quot;: &quot;application/json&quot;},
+)
+try:
+    with urllib.request.urlopen(request, timeout=45) as response:
+        result = json.load(response)
+    print(result[&quot;answers&quot;][&quot;color&quot;][&quot;choice&quot;])
+except urllib.error.HTTPError as error:
+    print(error.code, error.read().decode(&quot;utf-8&quot;))
+    raise</code></pre>
+          </div>
+        </section>
+        <section class="docs-section" id="errors">
+          <h2>Errors & troubleshooting</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>What to check</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>400 / 413 / 422</td>
+                  <td>
+                    Read the actual error: invalid fields, unsupported input,
+                    token limits, or model scoring failures may all reject a
+                    request.
+                  </td>
+                </tr>
+                <tr>
+                  <td>429</td>
+                  <td>
+                    Rate or capacity limit. Honor <code>Retry-After</code> when
+                    present; otherwise back off before retrying. Avoid retry
+                    loops without a delay.
+                  </td>
+                </tr>
+                <tr>
+                  <td>5xx</td>
+                  <td>
+                    Service failure. Retry with bounded backoff and preserve the
+                    original request for debugging.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Network / timeout</td>
+                  <td>
+                    Check connectivity and API availability. A browser error
+                    alone does not establish a model failure.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="docs-code">
+            <div>
+              <span>json</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre tabindex="0"><code>{
+  &quot;error&quot;: {
+    &quot;message&quot;: &quot;Expected nine finite logits&quot;,
+    &quot;type&quot;: &quot;invalid_request_error&quot;,
+    &quot;code&quot;: 422,
+    &quot;param&quot;: null,
+    &quot;details&quot;: []
+  }
+}</code></pre>
+          </div>
+          <p>
+            This is an observed scoring-error shape from the hosted demo.
+            “Expected nine finite logits” or “Expected one finite logit per
+            choice” indicates a failure in answer scoring; it does not mean your
+            text is too long. Capture the model, complete request, response,
+            time, and request ID if available. Comparing a combined request with
+            isolated questions can help identify the failing path.
+          </p>
+          <p>
+            The self-hosted HF server can use FastAPI-style
+            <code>detail</code> errors instead. Clients should inspect both HTTP
+            status and body, and handle non-JSON failure responses gracefully.
+            The playground preserves failed response JSON under “Under the
+            hood.”
+          </p>
+        </section>
+        <section class="docs-section" id="interpretation">
+          <h2>Usage, confidence & versioning</h2>
+          <p>
+            <code>usage.input_tokens</code> and
+            <code>usage.output_tokens</code> report the serving implementation’s
+            accounting. Hosted demo responses have reported one output token per
+            question. The local HF reference reports zero output tokens because
+            it reads logits without sampling; its input count counts unique
+            token prefixes across questions. Do not assume those implementations
+            report identical usage.
+          </p>
+          <p>
+            Choice and score probabilities are conditional on the supplied
+            candidate/rating set. Noul is a transformed expected rating. None is
+            automatically calibrated to real-world correctness. Model quality,
+            question wording, and rubric design affect decisions.
+          </p>
+          <p>
+            The shared prompt contract currently uses <code>v1</code>. In
+            Python, <code>prepare_prompt(request, version="v1")</code> selects
+            it. It is not a client-selectable HTTP request field. Legacy
+            independent/rating mode and score-format switches are not supported
+            by the shared schema.
+          </p>
+        </section>
+        <section class="docs-section" id="self-hosting">
+          <h2>Self-hosting &amp; Open Source reference implement</h2>
+          <p>
+            The repository’s HF server uses the same shared request, prompt, and
+            scoring modules. Unlike the hosted demo, it loads one model at
+            startup: the request’s <code>model</code> must match that ID or
+            local path.
+          </p>
+          <div class="docs-code">
+            <div>
+              <span>bash</span
+              ><button type="button" class="copy-code">Copy</button>
+            </div>
+            <pre
+              tabindex="0"
+            ><code>python -m pip install -e &#x27;./hf-server&#x27;
+python hf-server/hf_server.py \
+  --model Qwen/Qwen3.5-0.8B --device cpu --dtype float32 \
+  --max-model-len 4096 --port 8000</code></pre>
+          </div>
+          <p>
+            Its classifier URL is
+            <code>http://127.0.0.1:8000/v1/classifier</code>. It also exposes
+            <code>/health</code>, <code>/docs</code>, and
+            <code>/openapi.json</code>, plus <code>/v1/systemone</code> as a
+            classifier alias. The local HF implementation does not expose the
+            demo’s <code>/v1/models</code> endpoint. Its default branch cap is
+            100; the shared schema allows up to 256 questions. Runtime
+            token/branch limits apply in addition to schema validation.
+          </p>
+          <p>
+            For local diagnostic logits, start the HF server with
+            <code>ENABLE_OPEN_JEV_ADVANCED_METRICS=1</code> and send
+            <code>"options": {"raw_logits": true}</code>. Do not assume that
+            diagnostics are enabled on the public demo.
+          </p>
+          <p>
+            See the
+            <a
+              href="https://github.com/featherless-ai/simple-jev/blob/main/hf-server/API_REFERENCE.md"
+              >complete HF server reference</a
+            >
+            and the
+            <a
+              href="https://github.com/featherless-ai/simple-jev/blob/main/common/PROMPT_STRUCTURE_V1.md"
+              >language-independent v1 prompt specification</a
+            >.
+          </p>
+        </section>
+        <section class="docs-section" id="production">
+          <h2>Scaling into Production</h2>
+          <p>
+            For production, Simple Jev models on
+            <a href="https://featherless.ai/">Featherless</a> start at
+            <strong>$0.03 per million tokens</strong>, with higher limits on
+            paid plans. Hosted fine-tuned models and fine-tuning are planned as
+            support and usage grow. Use your production account’s connection
+            details rather than treating this public demo as a production
+            endpoint.
+          </p>
+        </section>
+      </article>
+    </main>
+    <span id="docs-copy-status" class="sr-only" role="status"></span>
+    <footer class="wrap">
+      <a class="wordmark" href="index.html" aria-label="Simple Jev home"
+        ><img
+          class="brand-logo"
+          src="assets/simple-jev.png"
+          alt="Simple Jev"
+          width="64"
+          height="64" /></a
+      ><a
+        class="built-by"
+        href="https://featherless.ai/"
+        aria-label="Built by Featherless.ai"
+        ><span>Built by</span
+        ><img
+          src="assets/featherless.png"
+          alt="Featherless.ai"
+          width="156"
+          height="51"
+      /></a>
+      <div>
+        <a href="https://github.com/featherless-ai/simple-jev"
+          >Source & docs ↗</a
+        ><a href="https://featherless.ai/">Featherless ↗</a>
+      </div>
+    </footer>
+  </body>
+</html>
