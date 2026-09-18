@@ -2,7 +2,7 @@
 
 # Simple Jev Project
 
-Use compatible open language models for structured classification and scoring, without training a separate classifier head.
+Use compatible open models from huggingface, for structured classification and scoring, without training a separate classifier head.
 
 Send shared context and a set of questions. Simple Jev reads the model's next-token logits for each question and builds a JSON response containing choices, rubric scores, or truth/support judgments. The model does not generate a JSON completion: the server constructs the response from the scores.
 
