@@ -1,0 +1,3 @@
+# Local datasets, teacher caches, checkpoints, and exported weights.
+runs/
+__pycache__/
