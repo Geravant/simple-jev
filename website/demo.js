@@ -19,7 +19,7 @@ function connection() {
   };
 }
 let connectionRevision = 0;
-const DEFAULT_MODEL = "featherless-ai/gemma-4-26B-A4B-classifier";
+const DEFAULT_MODEL = "featherless-ai/Qwen3.6-35B-A3B-classifier";
 const $ = (id) => document.getElementById(id);
 const pretty = (value) => JSON.stringify(value, null, 2);
 const percentage = (value) => `${Math.round(value * 100)}%`;
@@ -518,7 +518,7 @@ async function loadModels() {
         option.value = id;
         option.textContent =
           id === DEFAULT_MODEL
-            ? "Gemma 4 · 26B A4B"
+            ? "Qwen3.6 · 35B A3B"
             : id.replace(/^featherless-ai\//, "").replace(/-classifier$/, "");
         return option;
       }),

@@ -51,7 +51,8 @@ async function loadModels() {
     const data = await response.json()
     const models = [...new Set((data.data || []).map((item) => item.id).filter(Boolean))]
     if (!models.length) throw Error('No models available')
-    modelEl.replaceChildren(...models.map((model) => new Option(model, model, /gemma/i.test(model), /gemma/i.test(model))))
+    const preferred = models.includes('featherless-ai/Qwen3.6-35B-A3B-classifier') ? 'featherless-ai/Qwen3.6-35B-A3B-classifier' : models.find((model) => /qwen/i.test(model)) || models[0]
+    modelEl.replaceChildren(...models.map((model) => new Option(model, model, model === preferred, model === preferred)))
     modelEl.disabled = false
     setStatus('Ready to classify the selected bookmark sample.', 'ready')
     renderSelected()

@@ -50,7 +50,7 @@ Open the [playground](http://127.0.0.1:8765/) or the [API documentation](http://
 
 ## API behavior
 
-The client uses `https://simple-jev-demo-api.featherless.ai/v1/models` and `/v1/classifier`, with Gemma selected initially. The model list is fetched on load. Context is sent only after a visitor presses Run (or explicitly invokes the page's `run_classifier` WebMCP tool).
+The client uses `https://simple-jev-demo-api.featherless.ai/v1/models` and `/v1/classifier`, with Qwen3.6-35B-A3B selected initially. The model list is fetched on load. Context is sent only after a visitor presses Run (or explicitly invokes the page's `run_classifier` WebMCP tool).
 
 The API allows cross-origin browser requests and requires no authentication. The page displays the demo's 2k-token context and 4 RPS limits. A 1,200-character input cap is a UI convenience, not a token-count guarantee; the API enforces its real context limit. Requests time out after 45 seconds, double submission is blocked, and HTTP 429 activates a retry cooldown. The page never fabricates a successful response when the API fails.
 
