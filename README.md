@@ -186,7 +186,35 @@ curl http://127.0.0.1:8000/v1/classifier \
 JSON
 ```
 
-Unknown top-level request fields are ignored, including completion settings such as `temperature`, `max_tokens`, and `stream`. Unknown fields inside questions and options are rejected. There is no completion sampling or streaming. The HF server currently supports text only; images, audio, video, and tool calls are unsupported.
+Unknown top-level request fields are ignored, including completion settings such as `temperature`, `max_tokens`, and `stream`. Unknown fields inside questions and options are rejected. There is no completion sampling or streaming. The HF server accepts text and, for vision-language checkpoints such as Gemma 4 and Qwen3.5, images; audio, video, and tool calls are unsupported.
+
+Images go in a `messages` content-part list as base64 data URIs, in the hosted API's shape. The server never fetches remote URLs. Every image must be in the shared context (the messages), never in a question:
+
+```bash
+curl http://127.0.0.1:8000/v1/classifier \
+  -H 'Content-Type: application/json' \
+  --data-binary @- <<'JSON'
+{
+  "model": "google/gemma-4-26B-A4B-it",
+  "messages": [
+    {"role": "user", "content": [
+      {"type": "text", "text": "Photo from the workbench camera."},
+      {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,/9j/4AAQ..."}}
+    ]}
+  ],
+  "questions": {
+    "subject": {
+      "type": "choice",
+      "instructions": "What is the main object in the photo?",
+      "criteria": {"robot_arm": null, "circuit_board": null, "tool": null, "none_of_these": null}
+    },
+    "text_visible": {"type": "noul", "instructions": "Is there readable text in the photo?"}
+  }
+}
+JSON
+```
+
+The image is part of the shared prefix: the vision tower runs once per request, however many questions follow. Image soft tokens count towards `usage.input_tokens` and `--max-model-len`. `--max-images` (default 4) caps images per request; `--no-images` skips loading the processor.
 
 `usage.input_tokens` counts unique token prefixes within the request, sharing the common context across questions. `usage.output_tokens` is zero because no output tokens are generated. For diagnostic timings, start the server with `ENABLE_OPEN_JEV_ADVANCED_METRICS=1`; adding `"options": {"raw_logits": true}` to a request then includes selected-token logits.
 
@@ -267,7 +295,7 @@ python -m pytest -c hf-server/pyproject.toml common/tests hf-server/tests -q
 
 The tests cover request validation, prompt construction, response scoring, tensor/token mapping, HTTP behavior, and cached-versus-full inference using tiny locally initialized models. They do not require downloading pretrained model weights and do not measure classification accuracy.
 
-Models need a supported Transformers implementation, a usable chat template, compatible cache operations, and answer labels that each extend the rendered prompt by exactly one distinct token. The server checks label tokenization; compatibility with every open model is not guaranteed.
+Models need a supported Transformers implementation, a usable chat template, compatible cache operations, and answer labels that each extend the rendered prompt by exactly one distinct token. The server checks label tokenization; compatibility with every open model is not guaranteed. Image input additionally needs a checkpoint whose config has a vision tower and whose `AutoProcessor` loads; the server checks that the processor's placeholder expansion can be replayed onto every question branch. Cached image scoring is tested against full forwards on tiny Qwen3.5 (M-RoPE) and Gemma 4 models.
 
 ## One more thing: Really Fancy Decision Training (RFDT)
 

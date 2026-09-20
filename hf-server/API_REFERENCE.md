@@ -116,12 +116,29 @@ For this HF implementation each message contains only:
 | Field | Supported value |
 | --- | --- |
 | `role` | `system`, `developer`, `user`, or `assistant` |
-| `content` | String, including an empty string |
+| `content` | String, including an empty string, or a list of content parts (`user`/`assistant` only) |
 
-The shared schema also describes `tool`/`function` roles, null content, content
-part arrays and extra message fields. **The HF compiler rejects these.** Images,
-audio, video, tool calls, `name`, and other extra message properties are not
-supported. A model's chat template may further restrict roles or their order.
+Content parts are `{"type": "text", "text": "..."}` and, when the server was
+started on a vision-language checkpoint with image support, an image part in
+either shape:
+
+```json
+{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}
+{"type": "image", "url": "data:image/png;base64,..."}
+```
+
+Only `data:image/<type>;base64` URIs are read; the server never fetches remote
+URLs. Each decoded image is capped at 10 MB and `--max-images` (default 4) caps
+images per request. Images must be in the shared `messages` context: the final
+question is always a plain-text user turn, and the image is consumed once by
+the prefix forward. `system`/`developer` turns must be plain strings. A request
+with images against a server without a loaded processor returns 422.
+
+The shared schema also describes `tool`/`function` roles, null content and
+extra message fields. **The HF compiler rejects these.** Audio, video, tool
+calls, `name`, and other extra message properties are not supported. A model's
+chat template may further restrict roles or their order. Image soft tokens
+count in `usage.input_tokens` and against `--max-model-len`.
 
 For chat input replace `state` in the example with:
 
@@ -364,12 +381,14 @@ These are process settings, not HTTP request fields. Both `simple-jev` and
 | `--max-batch-size` | `32` | Maximum suffix rows per model forward; must be positive. |
 | `--max-batch-tokens` | `32768` | Maximum padded suffix tokens per batch; must be positive. Does not chunk or limit the prefix forward. |
 | `--max-request-branches` | `100` | Positive expanded-branch cap per classifier request, subject to schema hard limits. |
+| `--no-images` | Off | Do not load the checkpoint's processor; image content parts are then rejected even for vision models. Without this flag the processor is loaded whenever the model config has a vision tower, and a load failure is reported on stderr and degrades to text. |
+| `--max-images` | `4` | Maximum images per request. |
 | `--host` | `127.0.0.1` | Bind address. |
 | `--port` | `8000` | HTTP port. |
 | `-h`, `--help` | — | Print argument help and exit. |
 
 No CLI flags are currently provided for authentication, quantization, model
-aliases, request queue size, request concurrency, or vision. The service requires
+aliases, request queue size, request concurrency, audio or video. The service requires
 compatible copyable/reorderable Transformers caches and suitable single-token
 rating/choice labels; arbitrary HF models are not guaranteed to work.
 

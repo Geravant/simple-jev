@@ -93,16 +93,21 @@ one forward and is not chunked by `--max-batch-tokens`.
 
 ## Scope and validation
 
-This reference currently accepts **text only**, including text messages.
-Images, audio, video and tool calls are rejected. A multimodal model loader does
-not imply multimodal input support. Models need a compatible Transformers cache
+This reference accepts text, and images on vision-language checkpoints whose
+`AutoProcessor` loads (`--no-images` turns that off). Images are base64 data
+URIs in a content-part list; they must sit in the shared `messages` context,
+never in a question, because the image is consumed by the prefix forward. The
+processor runs once per request; its placeholder expansion is replayed onto
+every branch, and M-RoPE position offsets (Qwen3.5) are carried into the suffix
+batches. Audio, video and tool calls are rejected. Models need a compatible Transformers cache
 that supports copying and `reorder_cache`, a chat template, and single-token
 rating/choice labels. Arbitrary model compatibility is not guaranteed.
 
 The shared v1 prompt and scoring rules are the source of truth for this server.
 It does not claim exact numeric equivalence with another inference engine.
 Tests compare reused-cache logits against independent full-prompt forwards for
-tiny Qwen3, Qwen3.5, Gemma2 and Gemma4 models, and exercise API validation,
+tiny Qwen3, Qwen3.5, Gemma2 and Gemma4 models (Qwen3.5 and Gemma4 also with an
+image in the cached prefix), and exercise API validation,
 confidence, usage accounting and endpoint aliases. They use random local models,
 without downloading weights; they do not measure answer quality.
 

@@ -102,14 +102,21 @@ def test_invalid_boundary_and_duplicate_labels_rejected():
         {
             "state": None,
             "messages": [
-                {"role": "user", "content": [{"type": "text", "text": "red"}]}
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "red"},
+                        {"type": "image_url", "image_url": {"url": "data:image/png;base64,AA=="}},
+                    ],
+                }
             ],
         },
     ],
 )
 def test_text_restrictions_remain(patch):
-    """Shared schema acceptance must not bypass the HF text-only restrictions."""
-    with pytest.raises(ValueError, match="text|tools"):
+    """Shared schema acceptance must not bypass the HF restrictions: no tools,
+    and no images unless the compiler was given a processor."""
+    with pytest.raises(ValueError, match="image support|tools"):
         PromptCompiler(Tokenizer()).compile({**request(), **patch})
 
 
