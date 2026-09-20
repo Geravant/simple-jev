@@ -1,5 +1,5 @@
 # Simple Jev HF server as a custom container for Hugging Face Inference
-# Endpoints (or any GPU host). Weights are NOT baked in: Inference Endpoints
+# Endpoints (or any CUDA host). Weights are NOT baked in: Inference Endpoints
 # mounts the selected model repository at /repository; elsewhere set MODEL to
 # a Hub id or a mounted directory.
 #
@@ -13,14 +13,16 @@
 #   MAX_MODEL_LEN  per-branch token limit (default 8192)
 #   MAX_IMAGES     images per request (default 4)
 #   PORT           listen port (default 8000)
-FROM pytorch/pytorch:2.9.1-cuda12.8-cudnn9-runtime
+#
+# The server needs Python >= 3.12, which the pytorch/pytorch images do not
+# ship, so this starts from python:3.12 and installs the CUDA 12.8 torch
+# wheels; they bundle the CUDA runtime libraries, so no CUDA base is needed.
+FROM python:3.12-slim-bookworm
 
 ENV PIP_NO_CACHE_DIR=1 PYTHONUNBUFFERED=1 HF_HUB_ENABLE_HF_TRANSFER=0
 WORKDIR /app
 
-# torchvision must match the base image's torch; the Gemma 4 image processor
-# imports it. Installed first so the server install cannot pull another torch.
-RUN pip install --no-deps torchvision==0.24.1
+RUN pip install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cu128
 
 COPY common ./common
 COPY hf-server ./hf-server
