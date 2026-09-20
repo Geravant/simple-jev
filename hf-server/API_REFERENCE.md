@@ -383,6 +383,7 @@ These are process settings, not HTTP request fields. Both `simple-jev` and
 | `--max-request-branches` | `100` | Positive expanded-branch cap per classifier request, subject to schema hard limits. |
 | `--no-images` | Off | Do not load the checkpoint's processor; image content parts are then rejected even for vision models. Without this flag the processor is loaded whenever the model config has a vision tower, and a load failure is reported on stderr and degrades to text. |
 | `--max-images` | `4` | Maximum images per request. |
+| `--model-alias` | Unset | Extra name accepted in the request `model` field; repeatable. Useful when the weights are mounted under a path (`--model /repository --model-alias google/gemma-4-26B-A4B-it`). |
 | `--host` | `127.0.0.1` | Bind address. |
 | `--port` | `8000` | HTTP port. |
 | `-h`, `--help` | — | Print argument help and exit. |

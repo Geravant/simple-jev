@@ -1006,6 +1006,7 @@ def load_service(
     max_request_branches=100,
     images=True,
     max_images=4,
+    model_aliases=(),
 ):
     """Load a model and return a ready-to-use service, without starting HTTP.
 
@@ -1015,6 +1016,8 @@ def load_service(
     max_request_branches caps questions admitted in a single request. images
     loads the checkpoint's processor when its config has a vision tower, which
     enables image content parts; max_images caps images per request.
+    model_aliases are extra names accepted in the request "model" field, for
+    hosts that mount the weights under a path such as /repository.
 
     The loader sets service concurrency to one: separate requests are serialized,
     while branches within a request are batched. The backend's thread lock also
@@ -1069,6 +1072,7 @@ def load_service(
         backend,
         concurrency=1,
         max_request_branches=max_request_branches,
+        model_aliases=model_aliases,
         metadata={"backend": "transformers", "model_revision": revision},
     )
 
@@ -1100,6 +1104,14 @@ def main():
         help="do not load the processor; reject image content even for vision models",
     )
     parser.add_argument("--max-images", type=int, default=4)
+    parser.add_argument(
+        "--model-alias",
+        dest="model_aliases",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="extra name accepted in the request model field (repeatable)",
+    )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     args = vars(parser.parse_args())
