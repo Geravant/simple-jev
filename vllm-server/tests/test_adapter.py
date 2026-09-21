@@ -46,7 +46,10 @@ def test_branch_messages_keep_context_and_prefill_answer():
 def test_label_logprobs_matches_tokens_and_fills_missing():
     top = [{"token": "A", "logprob": -0.1}, {"token": "▁B", "logprob": -2.3}, {"token": "?", "logprob": -9}]
     lp = jv.label_logprobs(top, ("A", "B", "C"))
-    assert lp == {"A": -0.1, "B": -2.3, "C": -math.inf}
+    assert lp == {"A": -0.1, "B": -2.3, "C": -2.3 - 8.0}      # missing → finite floor
+    assert jv.label_logprobs([{"token": '"A', "logprob": -1}], ("A",)) == {"A": -1}
+    with pytest.raises(ValueError, match="No permitted label"):
+        jv.label_logprobs([{"token": "The", "logprob": -1}], ("A", "B"))
 
 
 @pytest.fixture

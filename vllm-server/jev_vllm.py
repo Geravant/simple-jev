@@ -98,10 +98,17 @@ def label_logprobs(top: list[dict], labels) -> dict[str, float]:
     space depending on the question type."""
     seen = {}
     for entry in top:
-        tok = (entry.get("token") or "").replace("▁", " ").strip()
+        tok = (entry.get("token") or "").replace("▁", " ").strip().strip('"')
         if tok and tok not in seen:
             seen[tok] = float(entry["logprob"])
-    return {label: seen.get(label, -math.inf) for label in labels}
+    found = {label: seen[label] for label in labels if label in seen}
+    if not found:
+        raise ValueError("No permitted label among the top tokens: "
+                         + ", ".join(repr(e.get("token")) for e in top[:12]))
+    # A label outside the window is rarer than the rarest one inside it; a
+    # finite floor keeps the scorer's softmax well defined (-inf is rejected).
+    floor = min(found.values()) - 8.0
+    return {label: found.get(label, floor) for label in labels}
 
 
 # vLLM client
@@ -171,7 +178,7 @@ class Service:
                 raise ValueError(f"At most {MAX_IMAGES} images per request")
         plan = prepare_prompt(request, version=self.template)
         start = time.perf_counter()
-        top_k = min(self.top_logprobs, max(len(q.output_labels) for q in plan.questions) + 8)
+        top_k = self.top_logprobs
         model = request.model if request.model in SERVED_NAMES else self.model
         questions = list(plan.questions)
         # Warm the shared prefix with the first branch, then fan out.
@@ -221,6 +228,18 @@ def create_app(service: Service, ready) -> FastAPI:
 
     app.post("/v1/classifier")(classify)
     app.post("/v1/systemone")(classify)
+
+    @app.post("/v1/chat/completions")
+    async def passthrough(request: Request):
+        """Raw access to the vLLM server behind this API (the host's auth on this
+        port applies), for diagnostics and client experiments."""
+        r = await service.vllm.client.post(service.vllm.base_url + "/v1/chat/completions",
+                                           content=await request.body(),
+                                           headers={"content-type": "application/json"})
+        ct = r.headers.get("content-type", "")
+        return JSONResponse(r.json() if ct.startswith("application/json") else {"raw": r.text[:2000]},
+                            status_code=r.status_code)
+
     return app
 
 
