@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import logging
 import math
 import os
@@ -39,7 +40,7 @@ from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import ValidationError
 
 _checkout_root = Path(__file__).resolve().parent.parent
@@ -232,13 +233,39 @@ def create_app(service: Service, ready) -> FastAPI:
     @app.post("/v1/chat/completions")
     async def passthrough(request: Request):
         """Raw access to the vLLM server behind this API (the host's auth on this
-        port applies), for diagnostics and client experiments."""
-        r = await service.vllm.client.post(service.vllm.base_url + "/v1/chat/completions",
-                                           content=await request.body(),
-                                           headers={"content-type": "application/json"})
-        ct = r.headers.get("content-type", "")
-        return JSONResponse(r.json() if ct.startswith("application/json") else {"raw": r.text[:2000]},
-                            status_code=r.status_code)
+        port applies): generation on the same model, streaming when the body
+        asks for it, so a client can converse on the box that classifies."""
+        body = await request.body()
+        try:
+            wants_stream = bool(json.loads(body).get("stream"))
+        except Exception:  # noqa: BLE001 — vLLM reports malformed JSON itself
+            wants_stream = False
+        url = service.vllm.base_url + "/v1/chat/completions"
+        headers = {"content-type": "application/json"}
+        if not wants_stream:
+            r = await service.vllm.client.post(url, content=body, headers=headers)
+            ct = r.headers.get("content-type", "")
+            return JSONResponse(r.json() if ct.startswith("application/json") else {"raw": r.text[:2000]},
+                                status_code=r.status_code)
+        req = service.vllm.client.build_request("POST", url, content=body, headers=headers)
+        r = await service.vllm.client.send(req, stream=True)
+        if r.status_code != 200:
+            text = (await r.aread()).decode(errors="replace")
+            await r.aclose()
+            return JSONResponse({"error": {"message": text[:1000], "code": r.status_code}},
+                                status_code=r.status_code)
+
+        async def relay():
+            try:
+                async for chunk in r.aiter_raw():
+                    yield chunk
+            except httpx.StreamConsumed:
+                yield r.content          # body already in memory (small replies, test transports)
+            finally:
+                await r.aclose()
+
+        return StreamingResponse(relay(), media_type="text/event-stream",
+                                 headers={"cache-control": "no-cache", "x-accel-buffering": "no"})
 
     return app
 

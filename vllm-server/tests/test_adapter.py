@@ -117,3 +117,26 @@ def test_http_validation_and_health(fake_vllm):
             r = await c.post("/v1/systemone", json={**REQ, "model": "alias/model"})
             assert r.status_code == 200
     asyncio.run(run())
+
+
+def test_passthrough_streams_sse(monkeypatch):
+    """A streaming chat request is relayed chunk by chunk; a non-streaming one
+    is returned as JSON."""
+    def handler(request: httpx.Request):
+        body = json.loads(request.content)
+        if body.get("stream"):
+            return httpx.Response(200, headers={"content-type": "text/event-stream"},
+                                  content=b'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\ndata: [DONE]\n\n')
+        return httpx.Response(200, json={"choices": [{"message": {"content": "Hi"}}]})
+    vllm = jv.VLLM("http://vllm.test")
+    vllm.client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    app = jv.create_app(jv.Service(vllm, "/repository"), lambda: True)
+
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+            r = await c.post("/v1/chat/completions", json={"model": "m", "messages": [], "stream": True})
+            assert r.status_code == 200 and r.headers["content-type"].startswith("text/event-stream")
+            assert b'"content":"Hi"' in r.content and b"[DONE]" in r.content
+            r = await c.post("/v1/chat/completions", json={"model": "m", "messages": []})
+            assert r.json()["choices"][0]["message"]["content"] == "Hi"
+    asyncio.run(run())
