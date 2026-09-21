@@ -2,6 +2,7 @@
 
 from .prompt_builder import (
     DEFAULT_TEMPLATE_VERSION,
+    TEMPLATE_VERSIONS,
     PromptPlan,
     ScoringQuestion,
     prepare_prompt,
@@ -11,6 +12,7 @@ from .response_scoring import build_answers, build_response
 
 __all__ = [
     "DEFAULT_TEMPLATE_VERSION",
+    "TEMPLATE_VERSIONS",
     "ClassifierRequest",
     "PromptPlan",
     "ScoringQuestion",

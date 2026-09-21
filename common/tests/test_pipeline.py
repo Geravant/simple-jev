@@ -305,3 +305,35 @@ def test_tensor_mapping_validation():
             build_answers(plan, {"0": tensor}, token_ids=mapping)
     with pytest.raises(ValueError, match="scalars"):
         build_answers(plan, {"0": {"A": torch.zeros(1), "B": 1.0}})
+
+
+def test_v2c_is_compact_and_scores_like_v1():
+    """v2c keeps v1's labels, answer prefixes and answer mapping; only the
+    branch text changes, and it is stated once."""
+    from common import TEMPLATE_VERSIONS
+
+    assert TEMPLATE_VERSIONS == ("v1", "v2c")
+    body = payload()
+    v1, v2 = prepare_prompt(body, version="v1"), prepare_prompt(body, version="v2c")
+    assert v2.template_version == "v2c"
+    assert v2.system_prompt_prefix == v1.system_prompt_prefix
+    assert v2.prefix_instruction == v1.prefix_instruction
+    assert len(v2.suffix_instruction) < len(v1.suffix_instruction)
+    for a, b in zip(v1.questions, v2.questions):
+        assert (a.question_id, a.answer_prefix, a.output_labels, a.answer_labels) == (
+            b.question_id, b.answer_prefix, b.output_labels, b.answer_labels)
+        assert len(b.instruction) < len(a.instruction) / 2
+        assert b.instruction.count("Question:") == 1 and "again" not in b.instruction
+    # Same logits → same answers under both templates.
+    assert build_response(v2, logits_for(v2), input_tokens=1)["answers"] == \
+        build_response(v1, logits_for(v1), input_tokens=1)["answers"]
+    # Descriptions survive; None is not rendered; a description equal to the
+    # answer is not repeated.
+    q = {"model": "m", "state": "x", "questions": {
+        "c": {"type": "choice", "instructions": "Pick.",
+              "criteria": {"red": "the colour of blood", "blue": None, "green": "green"}},
+        "s": {"type": "score", "instructions": "Level?", "criteria": ["low", "high"]}}}
+    plan = prepare_prompt(q, version="v2c")
+    c, s = plan.questions
+    assert "A: red — the colour of blood\nB: blue\nC: green" in c.instruction
+    assert "Levels:\n0: low\n1: high" in s.instruction

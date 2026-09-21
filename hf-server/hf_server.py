@@ -56,7 +56,7 @@ from common import (
     build_response,
     prepare_prompt,
 )
-from common.prompt_builder import DEFAULT_TEMPLATE_VERSION, canonical
+from common.prompt_builder import DEFAULT_TEMPLATE_VERSION, TEMPLATE_VERSIONS, canonical
 
 # Shared plan to native chat and tokens
 
@@ -1007,6 +1007,7 @@ def load_service(
     images=True,
     max_images=4,
     model_aliases=(),
+    template_version=DEFAULT_TEMPLATE_VERSION,
 ):
     """Load a model and return a ready-to-use service, without starting HTTP.
 
@@ -1018,6 +1019,7 @@ def load_service(
     enables image content parts; max_images caps images per request.
     model_aliases are extra names accepted in the request "model" field, for
     hosts that mount the weights under a path such as /repository.
+    template_version selects the shared prompt template (v1, or the compact v2c).
 
     The loader sets service concurrency to one: separate requests are serialized,
     while branches within a request are batched. The backend's thread lock also
@@ -1059,7 +1061,8 @@ def load_service(
     # PromptCompiler's default comes from common.DEFAULT_TEMPLATE_VERSION.
     # Keep one compiler/backend pair for the service's loaded model/tokenizer.
     compiler = PromptCompiler(
-        tokenizer, max_tokens=max_model_len, processor=processor, max_images=max_images
+        tokenizer, max_tokens=max_model_len, processor=processor, max_images=max_images,
+        version=template_version,
     )
     backend = HFBackend(
         model,
@@ -1104,6 +1107,12 @@ def main():
         help="do not load the processor; reject image content even for vision models",
     )
     parser.add_argument("--max-images", type=int, default=4)
+    parser.add_argument(
+        "--template-version",
+        choices=list(TEMPLATE_VERSIONS),
+        default=DEFAULT_TEMPLATE_VERSION,
+        help="shared prompt template: v1 (default) or the compact v2c",
+    )
     parser.add_argument(
         "--model-alias",
         dest="model_aliases",
