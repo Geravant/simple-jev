@@ -320,8 +320,12 @@ def test_v2c_is_compact_and_scores_like_v1():
     assert v2.prefix_instruction == v1.prefix_instruction
     assert len(v2.suffix_instruction) < len(v1.suffix_instruction)
     for a, b in zip(v1.questions, v2.questions):
-        assert (a.question_id, a.answer_prefix, a.output_labels, a.answer_labels) == (
-            b.question_id, b.answer_prefix, b.output_labels, b.answer_labels)
+        assert (a.question_id, a.answer_labels) == (b.question_id, b.answer_labels)
+        assert b.answer_prefix == '{"answer": "'          # every v2c branch is quoted
+        if a.question_id == "support":                   # score levels are lettered
+            assert b.output_labels == ("A", "B", "C", "D")
+        else:
+            assert b.output_labels == a.output_labels
         assert len(b.instruction) < len(a.instruction) / 2
         assert b.instruction.count("Question:") == 1 and "again" not in b.instruction
     # Same logits → same answers under both templates.
@@ -336,4 +340,4 @@ def test_v2c_is_compact_and_scores_like_v1():
     plan = prepare_prompt(q, version="v2c")
     c, s = plan.questions
     assert "A: red — the colour of blood\nB: blue\nC: green" in c.instruction
-    assert "Levels:\n0: low\n1: high" in s.instruction
+    assert "Levels:\nA: low\nB: high" in s.instruction and s.answer_prefix == '{"answer": "'

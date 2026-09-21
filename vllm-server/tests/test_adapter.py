@@ -40,7 +40,7 @@ def test_branch_messages_keep_context_and_prefill_answer():
     msgs2 = jv.branch_messages(plan2, req2, plan2.questions[1])
     assert [m["role"] for m in msgs2] == ["system", "user", "assistant"]
     assert msgs2[1]["content"].startswith('State:\n"The car is red."')
-    assert msgs2[2]["content"] == '{"answer": '
+    assert msgs2[2]["content"] == '{"answer": "'
 
 
 def test_label_logprobs_matches_tokens_and_fills_missing():
@@ -62,13 +62,16 @@ def fake_vllm(monkeypatch):
         body = json.loads(request.content)
         calls.append(body)
         assert body["max_tokens"] == 1 and body["continue_final_message"] is True
-        prefill = body["messages"][-1]["content"]
-        # Answer by which branch this is: letters for choice, digits for score/noul.
-        if prefill.endswith('"'):
-            top = [{"token": "A", "logprob": math.log(0.75)}, {"token": "B", "logprob": math.log(0.25)}]
+        assert body["messages"][-1]["content"] == '{"answer": "'    # every v2c branch is quoted
+        tail = body["messages"][-2]["content"]
+        # Answer by branch kind: A/B for the choice, A/B/C for the score
+        # levels, the nine rating digits for noul.
+        if "Truth rubric" in tail:
+            top = [{"token": str(i), "logprob": math.log(0.1 if i < 9 else 0.2)} for i in range(1, 10)]
+        elif "Levels:" in tail:
+            top = [{"token": s, "logprob": math.log(p)} for s, p in zip("ABC", [0.1, 0.2, 0.7])]
         else:
-            top = [{"token": str(i), "logprob": math.log(p)} for i, p in enumerate([0.1, 0.2, 0.7])] + \
-                  [{"token": str(i), "logprob": math.log(0.001)} for i in range(3, 10)]
+            top = [{"token": "A", "logprob": math.log(0.75)}, {"token": "B", "logprob": math.log(0.25)}]
         return httpx.Response(200, json={
             "choices": [{"message": {"content": "A"},
                          "logprobs": {"content": [{"token": "A", "top_logprobs": top}]}}],

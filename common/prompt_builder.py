@@ -306,11 +306,11 @@ def _prepare_v2c(request: ClassifierRequest) -> PromptPlan:
                 if is_choice
                 else tuple(str(i) for i in range(len(question.criteria)))
             )
-            symbols = tuple(
-                CHOICE_LABELS[: len(labels)]
-                if is_choice or len(labels) > 10
-                else string.digits[: len(labels)]
-            )
+            # Letters for every choice AND every score level: after a quoted
+            # answer prefix the model's next token is the label itself, which
+            # is what a logprob window sees (an unquoted digit prefix makes the
+            # model want a quote first and pushes digits out of the window).
+            symbols = tuple(CHOICE_LABELS[: len(labels)])
             descriptions = (
                 list(question.criteria.values()) if is_choice else question.criteria
             )
@@ -331,15 +331,13 @@ def _prepare_v2c(request: ClassifierRequest) -> PromptPlan:
             else:
                 detail = "Select the best matching level, lowest to highest. Return its label.\nLevels:\n"
             detail += "\n".join(lines)
-            answer_prefix = (
-                '{"answer": '
-                if question.type == "score" and len(labels) <= 10
-                else '{"answer": "'
-            )
+            answer_prefix = '{"answer": "'
         else:
+            # Noul keeps its nine rating digits (response_scoring reads them),
+            # quoted for the same reason as above.
             symbols = tuple("123456789")
             labels = symbols
-            answer_prefix = '{"answer": '
+            answer_prefix = '{"answer": "'
             detail = (
                 f"Truth rubric:\n{canonical(question.criteria or {})}\n"
                 "Rate the probability that the answer is yes, from 0.1 to 0.9."
